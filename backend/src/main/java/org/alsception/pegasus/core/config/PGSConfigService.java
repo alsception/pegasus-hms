@@ -1,0 +1,62 @@
+package org.alsception.pegasus.core.config;
+
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+@Service
+public class PGSConfigService 
+{
+    private final PGSConfigRepository configRepository;
+    private static final Logger logger = LoggerFactory.getLogger(PGSConfigService.class);
+
+    public PGSConfigService( PGSConfigRepository configRepository) 
+    {
+        this.configRepository = configRepository;
+    }
+
+    public boolean isLoginEnabled()
+    {
+        /**
+         * b_prefix means it is boolean
+         */
+        return this.isFeatureEnabled("b_login_enabled");
+    }
+
+    public boolean isRegistrationEnabled()
+    {
+        return this.isFeatureEnabled("b_registration_enabled");
+    }
+
+    public boolean isGuestShoppingEnabled()
+    {
+        return true;//todo: izgleda ovo trenutno neradi nista, implementirati do kraja
+        //return this.isFeatureEnabled("b_guest_shopping_enabled");
+    }
+
+    public boolean isShoppingEnabled()
+    {
+        return this.isFeatureEnabled("b_shopping_enabled");
+    }
+
+    public boolean isFeatureEnabled(String parameterName)
+    {
+        try
+        {
+            logger.trace("Loading service config from database");
+            Optional<PGSConfig> pgsc = this.configRepository.findByName(parameterName);
+            if(pgsc.isPresent())
+            {
+                return pgsc.get().getBooleanvalue();
+            }
+        }
+        catch(Exception e)
+        {
+            logger.error("Could not load configuration from database", e.getMessage());
+        }  
+
+        return true;
+    }
+
+}

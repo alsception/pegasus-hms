@@ -1,0 +1,615 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { link } from "svelte-spa-router";
+  import { get } from "svelte/store";
+  import {
+    auth,
+    getCurrentRole,
+    isAdmin,
+  } from "../../core/services/SessionStore";
+  import { formatPrice } from "../../utils/formatting";
+  import type { Product } from "./Product";
+  import Login from "../../core/auth/Login.svelte";
+  import LoadingOverlay from "../../core/utils/LoadingOverlay.svelte";
+  import ErrorDiv from "../../core/navigation/error/ErrorDiv.svelte";
+  import ProductCard from "./ProductCard.svelte";
+  import ProductCategories from "./ProductCategories.svelte";
+  import AddToCartButton from "./AddToCartButton.svelte";
+  import { fly } from "svelte/transition";
+  import ProductPage from "./ProductPage.svelte";
+  import { cartTotalCounter } from "../../core/services/CheckoutStore";
+
+  document.title = "Jelovnik | Barbacoa";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  //DEFINITIONS
+  let isAuthenticated = false;
+  let products: Product[] = [];
+  let filteredProducts: Product[] = [];
+  let loading: boolean = false;
+  let error: string | null = null;
+  let isListView = false;
+  let isAdminView = true;
+  let isDark = true;
+  let page = 0;
+  let size = 20; 
+  let totalProducts = 0; 
+  let totalPages = 0; 
+  let selectedCategory: number;
+  let productId = 0; //Product koji cemo prikazati na modalu kada se klikne
+  let zoomPix = false;
+  export let hideButtonDalje = false;
+
+
+  // AUTHENTICATION
+  $: auth.subscribe((value) => 
+  {
+    isAuthenticated = value.isAuthenticated;
+  });
+
+  /* function checkDarkmode() 
+  {
+    const check = () => (isDark = document.body.classList.contains("dark"));
+    check();
+
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  } */
+
+  function checkUrlParams() 
+  {
+    let search = window.location.search;
+    if (!search && window.location.hash.includes("?")) {
+      search = window.location.hash.substring(
+        window.location.hash.indexOf("?")
+      );
+    }
+    const params = new URLSearchParams(search);
+    let listViewParam = params.get("listview") || params.get("listView");
+    if (listViewParam !== null) {
+      isListView = listViewParam === "true";
+    }
+
+    let zp = params.get("zoom");
+
+    if(zp!== null)
+    {
+      zoomPix = true;
+    }else{
+    }
+      
+    
+  }
+
+  onMount(async () => 
+  {
+    //checkDarkmode();
+    checkUrlParams();
+
+    try 
+    {
+      const { isAuthenticated } = get(auth);
+      isAdminView = isAdmin();
+
+      if (!isAuthenticated) 
+      {
+        error = "Session expired. Please login again.";
+        return;
+      } 
+      else 
+      {
+        handleSearch();
+      }
+    } 
+    catch (err) 
+    {
+      error = err instanceof Error ? err.message : "Search failed";
+    }
+  });
+
+  let searchTerm = "";
+  let searchTimeout: ReturnType<typeof setTimeout>;
+
+  // Funkcija koja reaguje na kucanje
+  function handleInput() 
+  {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => 
+    {
+      page = 0; 
+      handleSearch();
+    }, 300); // Čeka 300ms pauze u kucanju pre nego što pozove API
+  }
+
+  function handleFormSubmit(event: { preventDefault: () => void }) 
+  {
+    event.preventDefault(); 
+    clearTimeout(searchTimeout); // Prekini planirani debounced poziv ako se stisne Enter
+    page = 0; 
+    handleSearch();
+  }
+
+  async function handleSearch() 
+  {
+    const token = $auth.token;
+    loading = true;
+    try 
+    {
+      const res = await fetch(
+        API_BASE_URL +
+          `/products?search=${searchTerm}&page=${page}&size=${size}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res.ok) 
+      {
+        if (res.status === 401) 
+        {
+          localStorage.removeItem("token");
+          auth.set({ token: null, isAuthenticated: false });
+          throw new Error("Authentication failed");
+        }
+        throw new Error(`Fetch error: ${res.status} - ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      products = data;
+      filteredProducts = data;
+      totalProducts = products.length;
+    } 
+    catch (err: any) 
+    {
+      console.error(error);
+      if (err.message.includes("401")) 
+      {
+        $auth.token = null;
+      } 
+      else 
+      {
+        error = err instanceof Error ? err.message : "Unknown error";
+      }
+    } 
+    finally 
+    {
+      loading = false;
+    }
+  }
+
+  function toggleView() 
+  {
+    if(isListView)
+    {      
+      isListView = false;
+    }
+    else
+    {
+      isListView = true;
+    }
+  }
+
+  function handleCategorySelect(category: number): void 
+  {    
+    //Imamo posebnu kategoriju sa id 6 za sve, ili 0 ali to nije u db. 
+    // Bitno je da se prikaze sve u oba slucaja
+    if ( category == 6 || category == 0 ) 
+    {
+      filteredProducts = products;
+    } 
+    else 
+    {
+      filteredProducts = products.filter((p) => p.category == category);
+    }
+
+    //scrolujemo na vrh (neradi uvek)
+    document
+      .getElementById("products-container")
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    document
+      .getElementById("products-list-container")
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  /* product modal */
+  let showModal = false;
+
+  function openModal() {   
+    showModal = true;
+  }
+
+  function closeModal() {
+    showModal = false;
+  }
+
+  function handleProductClick(id: number | undefined) 
+  {
+    if (id != undefined) productId = id;
+    openModal();
+  }
+
+  // 1. Deklariraj varijable izvan bloka
+  let cartTotal = 0;
+  let cartPriceFormatted = "";
+  let isPulsing = false;
+
+  // 2. Ažuriraj ih reaktivno
+  $: {
+    cartTotal = $cartTotalCounter;
+    cartPriceFormatted = formatPrice(cartTotal);
+  }
+
+  // Reaktivni blok koji prati promjene u košarici
+  $: if ($cartTotalCounter !== undefined) {
+    triggerPulse();
+  }
+
+  function triggerPulse() {
+    isPulsing = true;
+    // Nakon 600ms (dužina animacije) makni klasu kako bi se mogla ponovno aktivirati
+    setTimeout(() => {
+      isPulsing = false;
+    }, 600); 
+  }
+
+  let categories = [
+    {
+        "id": 1,
+        "name": "Predjela",
+        "fullName": "Predjela",
+        "level": 0,
+        "hasChildren": false
+    },
+    {
+        "id": 2,
+        "name": "Glavna jela",
+        "fullName": "Glavna jela",
+        "level": 0,
+        "hasChildren": false
+    },    
+    {
+        "id": 3,
+        "name": "Prilozi, salate, premazi",
+        "fullName": "Prilozi, salate, premazi",
+        "level": 0,
+        "hasChildren": false
+    },
+    {
+        "id": 4,
+        "name": "Desert",
+        "fullName": "Desert",
+        "level": 0,
+        "hasChildren": false
+    },
+    {
+        "id": 5,
+        "name": "Piće",
+        "fullName": "Piće",
+        "level": 0,
+        "hasChildren": false
+    },
+    /* {
+        "id": 6,
+        "name": "Sve",
+        "fullName": "Sve",
+        "level": 0,
+        "hasChildren": false
+    } */
+]
+
+</script>
+
+{#if !$auth.isAuthenticated}
+  <Login />
+{:else if error}
+  <ErrorDiv {error} />
+{:else}
+  <div
+    class="w-[50%] left-[25%] flex justify-center p-0 fixed z-9003 bg-transparent top-[-0.1rem]" 
+    style="justify-self: center;"
+  >
+  <!-- ovo ovde je uvek tamno -->
+    <div data-theme="dark"
+      class="prod-form-cntr w-full lg:max-w-4xl lg:p-4 lg:m-6 lg:mb-4 lg:mt-0.5 bg-base-200/80
+      lg:rounded-lg border-1 border-primary/20 backdrop-blur-lg lg:pb-[5px]
+              max-lg:fixed max-lg:top-0 max-lg:left-0 max-lg:p-[10px] max-lg:pb-0 fixed top-[-16.5] lg:-top-16.5 left-0.5 [width:-webkit-fill-available] 
+              lg:static lg:w-auto md:min-w-[680px] justify-self-center rounded"
+              class:hidden={showModal}
+    >
+      <form
+        on:submit|preventDefault={handleFormSubmit}
+        class="flex flex-col gap-1"
+        
+        id="brb-prod-l-f"
+      >
+        <div class="flex gap-1 mb-4">
+          <input
+            id="i-search"
+            type="text"
+            bind:value={searchTerm}
+            on:input={handleInput}
+            placeholder="Traži proizvod..."
+            class="input border-1 flex-1 w-max ml-10 border-secondary/60"
+          />
+          <button type="submit" class="btn btn-dash p-[0.5rem]">
+            <i class="fas fa-search"></i>
+            <span class="hidden sm:inline ml-1">Traži</span>
+          </button>
+
+          <div class=" p-0">
+            <ProductCategories
+              bind:selectedCategory
+              onSelect={handleCategorySelect}
+            />
+          </div>
+
+          <button
+            type="button"
+            on:click={toggleView}
+            class="btn btn-dash whitespace-nowrap"
+          >
+            {#if /*isListView && isLiteListView*/false}
+              <i class="fas fa-image"></i>
+            {:else}
+              <i class="fas fa-list"></i>
+            {/if}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="results" class="w-full max-w-4xl mx-auto mt-2 pt-2"></div>
+
+  {#if loading}
+    <LoadingOverlay />
+  {/if}
+
+  {#if isListView}
+    <div id="products-list-container" class="w-full max-w-[382px] md:max-w-[500px] lg:max-w-[600px] mx-auto p-0 mb-22">
+      <div class="w-full overflow-x-auto">
+        <table class="table w-full min-w-[382px]">
+          <tbody>
+            {#each filteredProducts as product, i}
+              <tr class="bg-base-200 outline-1 outline-primary/7 hover:bg-info/5">
+                <td class="pgs-td whitespace-nowrap p-0">
+                  <div class="">
+                    <h3 class="font-semibold text-lg max-w-[382px;] truncate text-primary" title={product.name}>
+                      <!-- svelte-ignore a11y_click_events_have_key_events -->
+                      <!-- svelte-ignore a11y_no_static_element_interactions -->
+                      <span on:click={() => handleProductClick(product.id)}
+                       class="pgs-hyperlink">{product.name}</span>
+                    </h3>
+                    <p class="text-sm text-primary/50 mt-1 line-clamp-3 max-w-[80%;]" title={product.description} style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal;">
+                      {product.description}
+                    </p>  
+                    <table class="w-full">
+                      <tbody>
+                        <tr>
+                          <td class="pgs-td text-left text-4xl">
+                            <h3 class="font-semibold text-lg truncate text-primary/50">
+                              {formatPrice(product.basePrice)}
+                            </h3>
+                          </td>
+                          <td class="p-0">
+                            <div class="flex justify-end items-end gap-2" style="font-size: 14px;">
+                              <AddToCartButton {product} width="40px" />
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+      {#if !hideButtonDalje}
+      <div style="position: fixed; bottom: 1.5rem; right: 1.5rem;">
+        {@render btnNext()}
+      </div>
+      {/if}
+    </div>
+  {:else if !products && !loading}
+    no products found :/
+  {:else}
+  <div class="mt-20">
+    <div id="products-container" class="flex flex-col gap-12 p-4 mb-20 mt-[-4rem] sm:mt-[-6rem]">
+
+
+      <!-- TODO: IFselected category -> ukloniti ostale -->
+
+    {#each categories as category (category.id)}
+      <div class="w-full">
+        <div class="w-full mb-6">
+          <h3 class="text-3xl font-bold pb-2 border-b border-secondary/30 text-primary/80">{category.name}</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 4xl:grid-cols-5 gap-6 md:gap-12" style="justify-items: center;">
+          {#each filteredProducts.filter(product => product.category == category.id) as product (product.id)}
+            <ProductCard {product} {zoomPix} />
+          {/each}
+        </div>
+      </div>
+    {/each}
+
+    {#if filteredProducts.some(product => !product.category || !categories.some(c => c.id == product.category))}
+      <div class="w-full">
+        <h3 class="text-3xl font-bold mb-6">Ostalo</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 4xl:grid-cols-5 gap-6 md:gap-12" style="justify-items: center;">
+          {#each filteredProducts.filter(product => !product.category || !categories.some(c => c.id == product.category)) as product (product.id)}
+            <ProductCard {product} {zoomPix} />
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+  </div>
+  </div>
+    {#if !hideButtonDalje}
+      {@render btnNext()}
+    {/if}
+  {/if}
+{/if}
+
+{#snippet btnNext()}
+<!--  -->
+  <div id="btn-nxt-cntr" class="btn-nxt-cntr fixed bottom-0 md:bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:right-15 lg:right-10 
+  md:translate-x-0 z-[9999] w-full max-w-2xl md:max-w-xs border-0 border-amber-400 
+  p-1 px-1 pb-0 transition-transform duration-30
+  " 
+  class:hidden={ !(cartTotal > 0)}>
+    <a 
+      class="btn btn-lg bg-zinc-950/75 dark:bg-zinc-950/80  --hover:bg-yellow-300 backdrop-blur-lg text-black border-1 
+      border-primary/20 w-full max-w-lg md:max-w-xs 
+      shadow-2xl ring-4 ring-white/10 pulsing-hov h-14 rounded-md md:rounded-4xl"
+      
+      use:link 
+      href="/cart"
+    >
+      {#if (cartTotal > 0)}
+      <span class="flex items-center gap-2 text-white/95 dark:text-white/70 text-xl dark:hover:ring-border-800">
+          Naruči 
+          <i class="fas fa-shopping-cart"></i>
+          <span class=" text-xl">{cartPriceFormatted}</span>
+      </span>
+      {:else}
+      <span class="flex items-center gap-2 text-white/95 dark:text-white/70">          
+        Naruči 
+          <i class="fas fa-shopping-cart"></i> 
+          <i class="fas fa-arrow-right text-sm"></i>
+      </span>
+      {/if}
+    </a>
+  </div>
+
+<style>
+.pulsing-hov:hover {
+  box-shadow: rgba(111, 0, 255, 0.357) 0px 0px 0px 10.3387px;
+  border: 2px solid 2px solid #6933ff;
+  animation: pulse 2.2s forwards;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(111, 0, 255, 0.7);
+  }
+  70% {
+    /* Senka se raširila, ali je još uvek malo vidljiva */
+    box-shadow: 0 0 0 21px rgba(0, 4, 255, 0);
+  }
+  100% {
+    /* Na kraju je potpuno nevidljiva i ostaje na nuli do novog kruga */
+    box-shadow: 0 0 0 0 rgba(0, 4, 255, 0);
+  }
+}
+</style> 
+
+{/snippet}
+{#if showModal}
+  <div class="modal pt-0 {showModal ? 'modal-open' : ''}" style="backdrop-filter: blur(10px); pointer-events: auto;">
+    <div
+      class="modal-box max-h-[90vh] w-full sm:w-8/12 max-w-5xl p-0 flex flex-col bg-base-200"
+      transition:fly={{ y: 50, duration: 300 }}
+    >
+      <!-- Fixed Header -->
+      <div
+        class="sticky top-0 bg-base-100 z-10 px-6 py-4 border-b border-base-300"
+      >
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="overflow-y-auto flex-1">
+        <ProductPage {productId} liteView={true}></ProductPage>
+      </div>
+
+      <!-- Fixed Footer -->
+      <div
+        class="sticky bottom-0 bg-base-100 z-10 px-6 py-4 border-t border-base-300"
+      >
+        <div class="flex justify-end gap-2">
+          <button class="btn btn-secondary" on:click={closeModal}
+            >Zatvori</button
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Glass Backdrop -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="modal-backdrop" on:click={closeModal}></div>
+  </div>
+{/if}
+
+<style>
+  .active {
+    background-color: color-mix(in srgb, var(--color-info) 40%, transparent);
+  }
+  .neon-btn {
+  position: relative;
+  padding: 15px 30px;
+  background: #000; /* Boja unutrašnjosti dugmeta */
+  color: #fff;
+  /* font-family: sans-serif; */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border: none;
+  cursor: pointer;
+  overflow: hidden; /* Ključno: da sakrije ostatak animacije */
+  /* border-radius: 8px; */
+}
+
+/* "Zmija" koja kruži */
+.neon-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    #ae00ff, /* Boja neona */
+    transparent 30%
+  );
+  animation: rotate 3s linear infinite;
+}
+
+/* Overlay koji pravi efekat tanke ivice */
+.neon-btn::after {
+  content: '';
+  position: absolute;
+  inset: 2px; /* Debljina ivice (što manji broj, tanja ivica) */
+  background: #000;
+  border-radius: 6px;
+  z-index: 0;
+}
+
+/* Tekst mora biti iznad svega */
+.neon-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Dodatni glow efekat na hover */
+.neon-btn:hover {
+  box-shadow: 0 0 20px #ff0055;
+  transition: 0.3s;
+}
+</style>

@@ -1,0 +1,66 @@
+# === Global files ===
+.DS_Store
+*.log
+*.class
+*.jar
+*.war
+*.ear
+.env
+
+# === VS Code ===
+.vscode/
+
+# === IntelliJ IDEA ===
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# === STS (Spring Tool Suite) ===
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# === NetBeans ===
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# === Maven & Gradle ===
+**/target/
+**/build/
+!.mvn/wrapper/maven-wrapper.jar
+
+# === Java backend specific ===
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-dev.properties
+
+# === Frontend store front svelte ===
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*  # catches .env.local, .env.production, etc.
+frontend/nbproject/private/
+
+# === Frontend backoffice svelte ===
+frontend_backoffice/node_modules/
+frontend_backoffice/dist/
+frontend_backoffice/.env
+frontend_backoffice/.env.*  # catches .env.local, .env.production, etc.
+frontend_backoffice/nbproject/*
+
+# === Editor backup files ===
+*~
+
+# === Other ===
+backend/src/main/resources/keystore.p12
+backend/src/main/resources/application-prod.properties
+keystore.p12
+#razni frontend buildovi koji nam netrebaju:
+backend/src/main/resources/static/*
