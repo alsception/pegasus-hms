@@ -142,7 +142,7 @@
     {
       const res = await fetch(
         API_BASE_URL +
-          `/products?search=${searchTerm}&page=${page}&size=${size}`,
+          `/rooms?search=${searchTerm}&page=${page}&size=${size}`,
         {
           method: "GET",
           headers: {

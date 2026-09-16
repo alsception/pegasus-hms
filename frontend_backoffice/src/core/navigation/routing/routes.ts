@@ -12,7 +12,7 @@ import ArtikliAdministration        from "../../../features/artikli/ArtikliAdmin
 import Products                     from "../../../features/products/ProductsListBarbacoa.svelte";
 import ProductDetail                from "../../../features/products/ProductPage.svelte";
 import ProductsAdminList            from "../../../features/products/InventoryList.svelte";
-import ProductAdministration        from "../../../features/products/ProductAdministration.svelte";
+import RoomAdministration        from "../../../features/products/RoomAdministration.svelte";
 
 import Tables                       from "../../../features/tables/Tables.svelte";
 import Reservations                 from "../../../features/reservations/Reservations.svelte";
@@ -49,7 +49,7 @@ export const components: ComponentRegistry =
     "/products": Products,
     "/products/:id": ProductDetail,
     "/inventory": ProductsAdminList,    
-    "/inventory/:id": ProductAdministration,
+    "/inventory/:id": RoomAdministration,
     "/tables": Tables,
     "/reservations": Reservations,
     "/users": Users,

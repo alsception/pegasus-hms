@@ -98,8 +98,8 @@
     {
       id: 8,
       emoji: "📔",
-      title: "Upravljanje jelovnikom",
-      description: "Upravljanje proizvodima",
+      title: "Sobe",
+      description: "Sobe",
       icon: "users--",
       href: "/inventory",
       color: "blue",

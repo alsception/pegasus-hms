@@ -44,8 +44,8 @@ export const navRoutes: NavRoutesMap =
       default: true,
     },
     "/inventory": {
-      label: "Upravljanje proizvodima",
-      icon: "box",
+      label: "Sobe",
+      icon: "bed",
       href: "#/inventory",
       component: "/inventory",
       componentDetails: "/inventory/:id",

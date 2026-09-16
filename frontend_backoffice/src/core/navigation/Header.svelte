@@ -72,13 +72,14 @@
   }
 </script>
 
-<div class="navbar shadow-sm fixed bg-[#0d0d0d]/84 bg-sky-300/84 dark:bg-slate-900/84 backdrop-blur-lg z-9000">
+<div class="navbar shadow-sm fixed bg-[#0d0d0d]/84 bg-sky-300/84 dark:bg-slate-900/84 backdrop-blur-lg z-9000"
+style="background-color: color-mix(in oklab, oklch(0.97 0 0) 84%, transparent);">
   <div class="navbar-start">
     <div class="pl-16 flex items-center gap-3">
       <a href="#/home" class="flex items-center">
-        <img src="/white_barbacoa.png" alt="Barbacoa logo" title="Barbacoa" style="max-width:149px;" class="invert-pic">
-      </a>
-      <span class="font-bold text-2xl" style="margin-top: -7px;color: darkblue;">BACKOFFICE</span>
+<!--         <img src="/white_barbacoa.png" alt=" logo" title="Barbacoa" style="max-width:149px;" class="invert-pic">
+ -->      </a>
+      <span class="font-bold text-2xl" style="margin-top: -7px;color: darkblue;">HMS BACKOFFICE</span>
     </div>
   </div>
   <div class="navbar-center"></div>

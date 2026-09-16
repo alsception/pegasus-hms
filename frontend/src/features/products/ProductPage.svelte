@@ -9,7 +9,7 @@
   import { formatPrice, getFormattedPrice } from "../../utils/formatting";
   import AddToCartButtonBig from "./AddToCartButtonBig.svelte";
 
-  document.title = "Barbacoa";
+  document.title = "Pegasus HMS";
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   export let productId: number;
@@ -31,7 +31,7 @@
   async function fetchProduct(id: number) {
     loading = true;
     try {
-      const res = await fetch(API_BASE_URL + `/products/${id}`, {
+      const res = await fetch(API_BASE_URL + `/rooms/${id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
