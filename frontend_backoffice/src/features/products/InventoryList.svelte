@@ -12,6 +12,7 @@
 
   // Room entity representation
   interface Room {
+    imageUrl: any;
     id: number;
     roomNumber: string;
     type: string;
@@ -379,8 +380,8 @@
 
           <thead class="bg-base-300">
             <tr class="h-12">
-              <th class="pgs-th">Status</th>
               <th class="pgs-th">Soba</th>
+              <th class="pgs-th">Status</th>
               <th class="pgs-th">Tip</th>
               <th class="pgs-th">Sprat</th>
               <th class="pgs-th">Kapacitet</th>
@@ -402,16 +403,7 @@
                 }`}
               >
 
-                <!-- Room status -->
-                <td class="text-center">
-                  <span
-                    class={`badge badge-soft badge-${getRoomStatusColor(room.status)} font-mono badge-sm uppercase`}
-                  >
-                    {getRoomStatusLabel(room.status)}
-                  </span>
-                </td>
-
-                <!-- Room number -->
+              <!-- Room number -->
                 <td class="pgs-td">
                   <a
                     use:link
@@ -421,6 +413,15 @@
                     {room.roomNumber}
                   </a>
                 </td>
+
+                <!-- Room status -->
+                <td class="text-center">
+                  <span
+                    class={`badge badge-soft badge-${getRoomStatusColor(room.status)} font-mono badge-sm uppercase`}
+                  >
+                    {getRoomStatusLabel(room.status)}
+                  </span>
+                </td>                
 
                 <!-- Room type -->
                 <td class="pgs-td">
@@ -539,96 +540,111 @@
       >
 
         {#each rooms as room}
-          <div class="card bg-base-200 shadow-xl w-full max-w-sm border border-primary/10">
+  <div class="card bg-base-200 shadow-xl w-full max-w-sm border border-primary/10 overflow-hidden">
 
-            <div class="card-body">
+    <!-- Room image -->
+    {#if room.imageUrl}
+      <figure class="h-48">
+        <img
+          src={room.imageUrl}
+          alt={`Soba ${room.roomNumber}`}
+          class="w-full h-full object-cover"
+        />
+      </figure>
+    {:else}
+      <figure class="h-48 bg-base-300 flex items-center justify-center">
+        <i class="fas fa-bed text-5xl text-base-content/20"></i>
+      </figure>
+    {/if}
 
-              <div class="flex justify-between items-start">
-                <h2 class="card-title text-primary">
-                  {room.roomNumber}
-                </h2>
+    <div class="card-body">
 
-                <span
-                  class={`badge badge-soft badge-${getRoomStatusColor(room.status)} font-mono badge-sm`}
-                >
-                  {getRoomStatusLabel(room.status)}
-                </span>
-              </div>
+      <div class="flex justify-between items-start">
+        <h2 class="card-title text-primary">
+          {room.roomNumber}
+        </h2>
 
-              <div class="divider my-1"></div>
+        <span
+          class={`badge badge-soft badge-${getRoomStatusColor(room.status)} font-mono badge-sm`}
+        >
+          {getRoomStatusLabel(room.status)}
+        </span>
+      </div>
 
-              <div class="space-y-3">
+      <div class="divider my-1"></div>
 
-                <div class="flex justify-between">
-                  <span class="text-secondary">Tip</span>
-                  <span class="font-semibold">
-                    {getRoomTypeLabel(room.type)}
-                  </span>
-                </div>
+      <div class="space-y-3">
 
-                <div class="flex justify-between">
-                  <span class="text-secondary">Sprat</span>
-                  <span class="font-mono">
-                    {room.floor}.
-                  </span>
-                </div>
+        <div class="flex justify-between">
+          <span class="text-secondary">Tip</span>
+          <span class="font-semibold">
+            {getRoomTypeLabel(room.type)}
+          </span>
+        </div>
 
-                <div class="flex justify-between">
-                  <span class="text-secondary">Kapacitet</span>
-                  <span class="font-mono">
-                    <i class="fas fa-users text-gray-400 mr-1"></i>
-                    {room.capacity}
-                  </span>
-                </div>
+        <div class="flex justify-between">
+          <span class="text-secondary">Sprat</span>
+          <span class="font-mono">
+            {room.floor}.
+          </span>
+        </div>
 
-                <div class="flex justify-between">
-                  <span class="text-secondary">Cena / noć</span>
-                  <span class="font-mono font-bold text-primary">
-                    {formatRoomPrice(room.pricePerNight)}
-                  </span>
-                </div>
+        <div class="flex justify-between">
+          <span class="text-secondary">Kapacitet</span>
+          <span class="font-mono">
+            <i class="fas fa-users text-gray-400 mr-1"></i>
+            {room.capacity}
+          </span>
+        </div>
 
-                <div class="flex justify-between">
-                  <span class="text-secondary">Aktivna</span>
-                  <span class={room.active ? "text-success" : "text-gray-500"}>
-                    {room.active ? "DA" : "NE"}
-                  </span>
-                </div>
+        <div class="flex justify-between">
+          <span class="text-secondary">Cena / noć</span>
+          <span class="font-mono font-bold text-primary">
+            {formatRoomPrice(room.pricePerNight)}
+          </span>
+        </div>
 
-              </div>
+        <div class="flex justify-between">
+          <span class="text-secondary">Aktivna</span>
+          <span class={room.active ? "text-success" : "text-gray-500"}>
+            {room.active ? "DA" : "NE"}
+          </span>
+        </div>
 
-              {#if room.description}
-                <div class="mt-3 text-sm text-secondary">
-                  {room.description}
-                </div>
-              {/if}
+      </div>
 
-              <div class="card-actions justify-end mt-4">
+      {#if room.description}
+        <div class="mt-3 text-sm text-secondary">
+          {room.description}
+        </div>
+      {/if}
 
-                <a
-                  href="#/inventory/{room.id}"
-                  use:link
-                  class="btn btn-sm btn-outline"
-                >
-                  <i class="fas fa-pen"></i>
-                  Uredi
-                </a>
+      <div class="card-actions justify-end mt-4">
 
-                {#if getCurrentRole() === "ADMIN"}
-                  <button
-                    class="btn btn-sm btn-outline hover:btn-error"
-                    on:click={() => deleteRoom(room.id)}
-                  >
-                    <i class="fas fa-trash"></i>
-                  </button>
-                {/if}
+        <a
+          href="#/inventory/{room.id}"
+          use:link
+          class="btn btn-sm btn-outline"
+        >
+          <i class="fas fa-pen"></i>
+          Uredi
+        </a>
 
-              </div>
+        {#if getCurrentRole() === "ADMIN"}
+          <button
+            class="btn btn-sm btn-outline hover:btn-error"
+            on:click={() => deleteRoom(room.id)}
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        {/if}
 
-            </div>
+      </div>
 
-          </div>
-        {/each}
+    </div>
+
+  </div>
+{/each}
 
       </div>
 

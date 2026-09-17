@@ -6,7 +6,10 @@ import java.util.Optional;
 
 public interface PGSRoomRepository extends JpaRepository<PGSRoom, Long> {
 
-    Optional<PGSRoom> findByRoomNumber(String roomNumber);
+    Optional<PGSRoom> findByRoomNumber(String roomNumber);   
 
     boolean existsByRoomNumber(String roomNumber);
+
+    /*List<PGSRoom> findAllByOrderByRoomNumberAsc();
+    List<PGSRoom> findAllByOrderByRoomNumberDesc();*/
 }

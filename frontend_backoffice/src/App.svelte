@@ -109,10 +109,7 @@
   <div class="drawer-content">
     <!-- Navbar -->
     <nav class="navbar w-full bg-base-300">
-      <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button">
-        <!-- Sidebar toggle icon -->
-        <i class="fas fa-bars text-xl"></i>
-      </label>
+      
       <div class="px-4 font-bold">PEGASUS HMS</div>
     </nav>
     <!-- Page content here -->
@@ -126,7 +123,10 @@
     <div class="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
       <!-- Sidebar content here -->
       <ul class="menu w-full grow">
-
+      <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button">
+        <!-- Sidebar toggle icon -->
+        <i class="fas fa-bars text-xl"></i>
+      </label>
         <!-- List items -->
         {#each navItems as item}
         <li>

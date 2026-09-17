@@ -1,6 +1,8 @@
 package org.alsception.pegasus.features.rooms;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,7 +14,7 @@ public class PGSRoomService {
     private final PGSRoomRepository roomRepository;
 
     public List<PGSRoom> getAllRooms() {
-        return roomRepository.findAll();
+        return roomRepository.findAll(Sort.by(Sort.Direction.ASC, "roomNumber"));
     }
 
     public PGSRoom getRoomById(Long id) {
@@ -49,6 +51,7 @@ public class PGSRoomService {
         room.setCapacity(updatedRoom.getCapacity());
         room.setPricePerNight(updatedRoom.getPricePerNight());
         room.setDescription(updatedRoom.getDescription());
+        room.setImageUrl(updatedRoom.getImageUrl());
         room.setActive(updatedRoom.getActive());
 
         return roomRepository.save(room);

@@ -18,6 +18,7 @@
     capacity: number | null;
     pricePerNight: number | null;
     description: string;
+    imageUrl: string,
     active: boolean;
     created?: string;
     modified?: string;
@@ -36,6 +37,7 @@
     capacity: null,
     pricePerNight: null,
     description: "",
+    imageUrl: "",
     active: true
   };
 
@@ -348,7 +350,7 @@
               <div>
                 <label for="pricePerNight" class="block text-sm font-medium text-secondary mb-2">
                   <i class="fas fa-money-bill-wave text-xs text-gray-400 mr-1"></i>
-                  Cena po noći
+                  Cena po noći EUR
                 </label>
 
                 <input
@@ -362,26 +364,28 @@
                 />
               </div>
 
-              <!-- Valuta - opciono, nije deo entiteta -->
-              <div>
-                <label class="block text-sm font-medium text-secondary mb-2">
-                  Valuta
-                </label>
-
-                <input
-                  type="text"
-                  class="pgs-input w-full bg-base-300 opacity-60"
-                  value="EUR"
-                  disabled
-                />
-
-                <p class="text-secondary text-xs mt-2">
-                  Valuta nije posebno polje u PGSRoom entitetu.
-                </p>
-              </div>
-
             </div>
           </div>
+
+          <!-- Napomena -->
+          <div class="bg-base-200 p-6 rounded-xl shadow-sm border border-neutral/20">
+            <h3 class="text-xl font-semibold text-primary mb-6">
+              Napomena
+            </h3>
+
+            <label for="roomDescription" class="block text-sm font-medium text-secondary mb-2">
+              Dodatne informacije
+            </label>
+
+            <textarea
+              id="roomDescription"
+              class="pgs-input w-full resize-vertical"
+              rows="6"
+              bind:value={formData.description}
+              placeholder=""
+            ></textarea>
+          </div>
+
 
         </div>
 
@@ -434,24 +438,29 @@
             </div>
           </div>
 
-          <!-- Napomena -->
+          <!-- Slika -->
           <div class="bg-base-200 p-6 rounded-xl shadow-sm border border-neutral/20">
-            <h3 class="text-xl font-semibold text-primary mb-6">
-              Napomena
-            </h3>
-
-            <label for="roomDescription" class="block text-sm font-medium text-secondary mb-2">
-              Dodatne informacije
-            </label>
-
-            <textarea
-              id="roomDescription"
-              class="pgs-input w-full resize-vertical"
-              rows="6"
-              bind:value={formData.description}
-              placeholder="Napomena o sobi, opremi, pogledu, dodatnim krevetima..."
-            ></textarea>
-          </div>
+            <div class="mb-6 border-b border-neutral/10 pb-2">
+              <h3 class="text-xl font-semibold text-primary">Slika</h3>
+            </div>
+            <div>
+            <div class="w-full h-96  bg-gray-100 dark:bg-black flex items-center justify-center overflow-hidden">
+                {#if formData.imageUrl}
+                  <img
+                    class="w-full h-full object-cover"
+                    src={formData.imageUrl}
+                    alt={formData.roomNumber}
+                  />
+                {:else}
+                  <span class="text-gray-400 dark:text-gray-500">No image available</span>
+                {/if}
+              </div>
+              <label for="imglink" class="block text-sm font-medium text-secondary mb-2">
+                <i class="fas fa-image text-xs text-gray-400 mr-1"></i> Link slike
+              </label>
+              <input id="imglink" class="pgs-input w-full" bind:value={formData.imageUrl} />
+            </div>
+          </div>   
 
         </div>
 

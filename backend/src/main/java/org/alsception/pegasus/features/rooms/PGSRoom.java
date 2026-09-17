@@ -47,6 +47,9 @@ public class PGSRoom {
     @Column
     private String description;
 
+    @Column(length = 255)
+    private String imageUrl;
+
     @Column(nullable = false)
     private Boolean active = true;
 
