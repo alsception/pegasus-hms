@@ -123,7 +123,7 @@
     <div class="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
       <!-- Sidebar content here -->
       <ul class="menu w-full grow">
-      <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button">
+      <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button ml-auto">
         <!-- Sidebar toggle icon -->
         <i class="fas fa-bars text-xl"></i>
       </label>
@@ -133,7 +133,7 @@
           <a
             use:link
             href={item.disabled ? "#" : item.href}
-            class="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{item.label}">
+            class="is-drawer-close:tooltip is-drawer-close:tooltip-right py-2 text-primary/90 font-bold" data-tip="{item.label}">
             <!-- icon -->
             <i class="fas fa-{item.icon} w-5"></i>
             <span class="is-drawer-close:hidden">{item.label}</span>

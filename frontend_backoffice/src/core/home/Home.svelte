@@ -116,7 +116,7 @@
       href: "/reservations",
       color: "red",
       default: false,
-      admin: false,
+      admin: true,
       customer: false,
     },
     {

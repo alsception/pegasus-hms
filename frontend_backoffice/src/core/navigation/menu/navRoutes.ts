@@ -84,9 +84,9 @@ export const navRoutes: NavRoutesMap =
       icon: "calendar",
       href: "#/reservations",
       component: null,
-      disabled: true,
-      admin: false,
-      customer: false,
+      disabled: false,
+      admin: true,
+      customer: true,
     },
     "/checkout": {
       label: "Checkout",
