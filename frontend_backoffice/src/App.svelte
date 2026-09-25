@@ -108,7 +108,7 @@
   <input id="my-drawer-4" type="checkbox" class="drawer-toggle inline" />
   <div class="drawer-content">
     <!-- Navbar -->
-    <nav class="navbar w-full bg-base-300">
+    <nav class="navbar w-full bg-[color-mix(in oklab, oklch(0.97 0 0) 84%, transparent)] shadow-sm">
       
       <div class="px-4 font-bold">PEGASUS HMS</div>
     </nav>
@@ -125,7 +125,7 @@
       <ul class="menu w-full grow">
       <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button ml-auto">
         <!-- Sidebar toggle icon -->
-        <i class="fas fa-bars text-xl"></i>
+        <i class="fas fa-bars text-xl mr-2"></i>
       </label>
         <!-- List items -->
         {#each navItems as item}

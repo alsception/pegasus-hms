@@ -2,7 +2,9 @@
   import { onMount } from "svelte";
   import { link } from "svelte-spa-router";
   import { get } from "svelte/store";
-  import { auth, getCurrentRole, isAdmin } from "../../core/services/SessionStore";
+  import { auth } from "../../core/services/SessionStore";
+  import LoadingOverlay from "../../core/utils/LoadingOverlay.svelte";
+  import ErrorDiv from "../../core/navigation/error/ErrorDiv.svelte";
 
   type ReservationStatus =
     | "PENDING"
@@ -29,28 +31,60 @@
   let loading = true;
   let error = "";
 
+  // Search fields
+  let dateFrom = "";
+  let dateTo = "";
+  let priceFrom: number | null = null;
+  let priceTo: number | null = null;
+  let persons: number | null = null;
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   onMount(async () => {
-    console.log('hello reservations');
     await loadReservations();
   });
 
   async function loadReservations() {
     loading = true;
     error = "";
-        const token = get(auth).token;
 
+    const token = get(auth).token;
 
     try {
-        
-      const response = await fetch(`${API_BASE_URL}/reservations`,{
+      const params = new URLSearchParams();
+
+      if (dateFrom) {
+        params.append("dateFrom", dateFrom);
+      }
+
+      if (dateTo) {
+        params.append("dateTo", dateTo);
+      }
+
+      if (priceFrom != null) {
+        params.append("priceFrom", priceFrom.toString());
+      }
+
+      if (priceTo != null) {
+        params.append("priceTo", priceTo.toString());
+      }
+
+      if (persons != null) {
+        params.append("persons", persons.toString());
+      }
+
+      const query = params.toString();
+
+      const response = await fetch(
+        `${API_BASE_URL}/reservations/search${query ? `?${query}` : ""}`,
+        {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json"
           }
-        });
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Greška prilikom učitavanja rezervacija");
@@ -63,6 +97,16 @@
     } finally {
       loading = false;
     }
+  }
+
+  function resetSearch() {
+    dateFrom = "";
+    dateTo = "";
+    priceFrom = null;
+    priceTo = null;
+    persons = null;
+
+    loadReservations();
   }
 
   function formatDate(date: string) {
@@ -152,34 +196,143 @@
   </div>
 
 
+  <!-- Search -->
+    <div class="w-full flex justify-center mb-8">
+
+      <div class="w-full max-w-8xl p-8 bg-base-200 rounded-lg">
+
+      <h2 class="card-title text-lg mb-2">
+        <i class="fas fa-filter"></i>
+        Pretraga rezervacija
+      </h2>
+
+      <form
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+        on:submit|preventDefault={loadReservations}
+      >
+
+        <!-- Date From -->
+        <label class="form-control">
+          <span class="label">
+            <span class="label-text">Datum od</span>
+          </span>
+
+          <input
+            type="date"
+            class="pgs-input"
+            bind:value={dateFrom}
+          />
+        </label>
+
+
+        <!-- Date To -->
+        <label class="form-control">
+          <span class="label">
+            <span class="label-text">Datum do</span>
+          </span>
+
+          <input
+            type="date"
+            class="pgs-input"
+            bind:value={dateTo}
+          />
+        </label>
+
+
+        <!-- Price From -->
+        <label class="form-control">
+          <span class="label">
+            <span class="label-text">Cena od (EUR)</span>
+          </span>
+
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="pgs-input"
+            placeholder="0.00"
+            bind:value={priceFrom}
+          />
+        </label>
+
+
+        <!-- Price To -->
+        <label class="form-control">
+          <span class="label">
+            <span class="label-text">Cena do (EUR)</span>
+          </span>
+
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="pgs-input"
+            placeholder="9999.99"
+            bind:value={priceTo}
+          />
+        </label>
+
+
+        <!-- Persons -->
+        <label class="form-control">
+          <span class="label">
+            <span class="label-text">Broj osoba</span>
+          </span>
+
+          <input
+            type="number"
+            min="1"
+            step="1"
+            class="pgs-input"
+            placeholder="2"
+            bind:value={persons}
+          />
+        </label>
+
+
+        <!-- Buttons -->
+        <div class="sm:col-span-2 lg:col-span-5 flex gap-2 justify-end mt-2">
+
+          <button
+            type="button"
+            class="btn btn-ghost"
+            on:click={resetSearch}
+          >
+            <i class="fas fa-xmark"></i>
+            Poništi
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-search"></i>
+            Pretraži
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
   <!-- Loading -->
   {#if loading}
 
-    <div class="flex justify-center py-16">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
-    </div>
-
+       <LoadingOverlay />
 
   <!-- Error -->
   {:else if error}
 
-    <div class="alert alert-error">
-      <i class="fas fa-circle-exclamation"></i>
-      <span>{error}</span>
-
-      <button
-        class="btn btn-sm"
-        on:click={loadReservations}
-      >
-        Pokušaj ponovo
-      </button>
-    </div>
-
+        <ErrorDiv {error} />
 
   <!-- Empty -->
   {:else if reservations.length === 0}
 
     <div class="card bg-base-200">
+
       <div class="card-body items-center text-center py-16">
 
         <i class="fas fa-calendar-xmark text-5xl text-base-content/20"></i>
@@ -189,18 +342,11 @@
         </h2>
 
         <p class="text-base-content/60">
-          Trenutno nema evidentiranih rezervacija.
+          Nema rezervacija koje odgovaraju zadanim kriterijima.
         </p>
 
-        <a
-          href="#/reservations/new"
-          use:link
-          class="btn btn-primary mt-2"
-        >
-          Nova rezervacija
-        </a>
-
       </div>
+
     </div>
 
 
@@ -212,6 +358,7 @@
       <table class="table table-zebra">
 
         <thead>
+
           <tr>
             <th>ID</th>
             <th>Soba</th>
@@ -222,6 +369,7 @@
             <th>Cena</th>
             <th></th>
           </tr>
+
         </thead>
 
         <tbody>
@@ -253,11 +401,13 @@
               </td>
 
               <td>
+
                 <span
                   class={`badge badge-soft badge-${getStatusColor(reservation.status)}`}
                 >
                   {getStatusLabel(reservation.status)}
                 </span>
+
               </td>
 
               <td class="font-mono font-semibold">
@@ -265,6 +415,7 @@
               </td>
 
               <td>
+
                 <a
                   href={`#/reservations/${reservation.id}`}
                   use:link
@@ -272,6 +423,7 @@
                 >
                   <i class="fas fa-eye"></i>
                 </a>
+
               </td>
 
             </tr>
@@ -297,6 +449,7 @@
             <div class="flex justify-between items-start">
 
               <div>
+
                 <div class="text-sm text-base-content/50">
                   Rezervacija
                 </div>
@@ -304,6 +457,7 @@
                 <h2 class="text-lg font-bold">
                   #{reservation.id}
                 </h2>
+
               </div>
 
               <span
@@ -314,11 +468,14 @@
 
             </div>
 
+
             <div class="divider my-1"></div>
+
 
             <div class="space-y-2 text-sm">
 
               <div class="flex justify-between">
+
                 <span class="text-base-content/60">
                   Soba
                 </span>
@@ -326,9 +483,12 @@
                 <span class="font-semibold">
                   #{reservation.roomId}
                 </span>
+
               </div>
 
+
               <div class="flex justify-between">
+
                 <span class="text-base-content/60">
                   Dolazak
                 </span>
@@ -336,9 +496,12 @@
                 <span>
                   {formatDate(reservation.checkIn)}
                 </span>
+
               </div>
 
+
               <div class="flex justify-between">
+
                 <span class="text-base-content/60">
                   Odlazak
                 </span>
@@ -346,9 +509,12 @@
                 <span>
                   {formatDate(reservation.checkOut)}
                 </span>
+
               </div>
 
+
               <div class="flex justify-between">
+
                 <span class="text-base-content/60">
                   Vreme dolaska
                 </span>
@@ -356,9 +522,12 @@
                 <span class="font-mono">
                   {formatTime(reservation.expectedArrivalTime)}
                 </span>
+
               </div>
 
+
               <div class="flex justify-between">
+
                 <span class="text-base-content/60">
                   Cena
                 </span>
@@ -366,18 +535,24 @@
                 <span class="font-mono font-bold text-primary">
                   {formatPrice(reservation.totalPrice)}
                 </span>
+
               </div>
 
             </div>
 
+
             {#if reservation.notes}
 
               <div class="mt-3 text-sm text-base-content/60">
+
                 <i class="fas fa-note-sticky mr-1"></i>
+
                 {reservation.notes}
+
               </div>
 
             {/if}
+
 
             <div class="card-actions justify-end mt-2">
 
