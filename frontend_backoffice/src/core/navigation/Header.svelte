@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import PrimaryMenu from "./menu/PrimaryMenu.svelte";
   import NotificationsInfo from "./NotificationsInfo.svelte";
-  import CartDetails from "../../features/cart/CartDetails.svelte";
+  //import CartDetails from "../../features/cart/CartDetails.svelte";
   import { fly } from "svelte/transition";
 
   //TODO: ovo sad mora da se ucita sa servera, i da moze da se promeni i posalje na server
@@ -104,7 +104,7 @@ style="background-color: color-mix(in oklab, oklch(0.97 0 0) 84%, transparent);"
             <li> 
               <div class="max-h-[90vh] w-11/12 max-w-5xl p-0 flex flex-col bg-base-100 bg-transparent">        
                 <!-- TODO: OVDE CEMO STAVITI CARTLITE -->
-                <CartDetails />
+                <!--CartDetails /-->
               </div>
             </li>
           </ul>
@@ -179,7 +179,7 @@ style="background-color: color-mix(in oklab, oklch(0.97 0 0) 84%, transparent);"
 
       <!-- Scrollable Content -->
       <div class="overflow-y-auto flex-1 px-3 py-2">
-        <CartDetails />
+        <!--CartDetails /-->
       </div>
 
       <!-- Fixed Footer -->

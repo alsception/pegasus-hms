@@ -5,9 +5,16 @@ import org.alsception.pegasus.features.rooms.PGSRoom;
 import org.alsception.pegasus.features.rooms.PGSRoomRepository;
 import org.alsception.pegasus.features.users.PGSUser;
 import org.alsception.pegasus.features.users.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -17,6 +24,8 @@ public class PGSReservationService {
     private final PGSReservationRepository reservationRepository;
     private final PGSRoomRepository roomRepository;
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(PGSReservationService.class);
+
 
     @Transactional(readOnly = true)
     public List<PGSReservationDTO> getAllReservations() {
@@ -26,12 +35,22 @@ public class PGSReservationService {
                 .toList();
     }
 
+    public List<PGSReservationDTO> searchReservations(LocalDate dateFrom, LocalDate dateTo,
+                                                  BigDecimal priceFrom, BigDecimal priceTo,
+                                                  Integer persons) {
+        return reservationRepository
+                        .search(dateFrom, dateTo, priceFrom, priceTo, persons)
+                        .stream()
+                        .map(this::toDTO)   // tvoj postojeći mapper
+                        .toList();
+    }
+
     @Transactional(readOnly = true)
     public PGSReservationDTO getReservation(Long id) {
 
         PGSReservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Reservation not found: " + id)
+                        new EntityNotFoundException("Reservation not found: " + id)
                 );
 
         return toDTO(reservation);
@@ -42,7 +61,7 @@ public class PGSReservationService {
 
         PGSRoom room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() ->
-                        new RuntimeException("Room not found: " + dto.getRoomId())
+                        new EntityNotFoundException("Room not found: " + dto.getRoomId())
                 );
 
         validateDates(dto);
@@ -64,11 +83,15 @@ public class PGSReservationService {
         reservation.setTotalPrice(dto.getTotalPrice());
         reservation.setNotes(dto.getNotes());
 
+        if (dto.getGuests() != null) {
+                reservation.setGuests(dto.getGuests());
+        }
+
         if (dto.getBookerId() != null) {
 
             PGSUser user = userRepository.findById(dto.getBookerId())
                     .orElseThrow(() ->
-                            new RuntimeException(
+                            new EntityNotFoundException(
                                     "User not found: " + dto.getBookerId()
                             )
                     );
@@ -87,7 +110,7 @@ public class PGSReservationService {
 
         PGSReservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Reservation not found: " + id)
+                        new EntityNotFoundException("Reservation not found: " + id)
                 );
 
         validateDates(dto);
@@ -98,6 +121,9 @@ public class PGSReservationService {
         reservation.setExpectedDepartureTime(dto.getExpectedDepartureTime());
         reservation.setTotalPrice(dto.getTotalPrice());
         reservation.setNotes(dto.getNotes());
+        if (dto.getGuests() != null) {
+                reservation.setGuests(dto.getGuests());
+        }
 
         if (dto.getStatus() != null) {
             reservation.setStatus(dto.getStatus());
@@ -108,7 +134,7 @@ public class PGSReservationService {
 
             PGSRoom room = roomRepository.findById(dto.getRoomId())
                     .orElseThrow(() ->
-                            new RuntimeException(
+                            new EntityNotFoundException(
                                     "Room not found: " + dto.getRoomId()
                             )
                     );
@@ -120,7 +146,7 @@ public class PGSReservationService {
 
             PGSUser user = userRepository.findById(dto.getBookerId())
                     .orElseThrow(() ->
-                            new RuntimeException(
+                            new EntityNotFoundException(
                                     "User not found: " + dto.getBookerId()
                             )
                     );
@@ -135,7 +161,7 @@ public class PGSReservationService {
     public void deleteReservation(Long id) {
 
         if (!reservationRepository.existsById(id)) {
-            throw new RuntimeException(
+            throw new EntityNotFoundException(
                     "Reservation not found: " + id
             );
         }
@@ -188,27 +214,88 @@ public class PGSReservationService {
         dto.setId(reservation.getId());
 
         if (reservation.getBooker() != null) {
-            dto.setBookerId(
-                    reservation.getBooker().getId()
-            );
+                dto.setBookerId(reservation.getBooker().getId());
         }
 
-        dto.setRoomId(
-                reservation.getRoom().getId()
-        );
-
+        dto.setRoomId(reservation.getRoom().getId());
+        dto.setRoomNumber(reservation.getRoom().getRoomNumber());
         dto.setCheckIn(reservation.getCheckIn());
         dto.setCheckOut(reservation.getCheckOut());
-        dto.setExpectedArrivalTime(
-                reservation.getExpectedArrivalTime()
-        );
-        dto.setExpectedDepartureTime(
-                reservation.getExpectedDepartureTime()
-        );
+        dto.setExpectedArrivalTime(reservation.getExpectedArrivalTime());
+        dto.setExpectedDepartureTime(reservation.getExpectedDepartureTime());
+        dto.setGuests(reservation.getGuests());
         dto.setStatus(reservation.getStatus());
         dto.setTotalPrice(reservation.getTotalPrice());
         dto.setNotes(reservation.getNotes());
+        dto.setCreated(reservation.getCreated());
+        dto.setModified(reservation.getModified());
 
         return dto;
+    }
+
+    @Transactional
+    public List<PGSReservation> createSampleReservations() 
+    {
+        logger.info("Creating sample reservations...");
+        List<PGSRoom> rooms = roomRepository.findAll();
+
+        if (rooms.isEmpty()) 
+                {
+            throw new IllegalStateException("Nema soba u bazi, prvo kreiraj bar jednu sobu.");
+        }
+        PGSUser booker = userRepository.findAll().stream().findFirst().orElse(null);
+
+        LocalDate today = LocalDate.now();
+
+        List<PGSReservation> reservations = new ArrayList<>();
+
+        Object[][] reservationData = 
+        {
+        {0, 0, 1, "90.00", 14, 0, 10, 0, "Sample reservation 1"},
+        {1, 2, 5, "250.00", 16, 30, 11, 0, "Sample reservation 2"},
+        {2, 7, 14, "480.00", 18, 0, 12, 0, "Sample reservation 3"}
+        };
+
+        int i = 1;
+        for (Object[] data : reservationData) 
+        {
+                PGSReservation reservation = buildReservation(
+                        rooms.get((int) data[0] % rooms.size()),
+                        booker,
+                        today.plusDays((int) data[1]),
+                        today.plusDays((int) data[2]),
+                        i++, // guests
+                        new BigDecimal((String) data[3]),
+                        LocalTime.of((int) data[4], (int) data[5]),
+                        LocalTime.of((int) data[6], (int) data[7]),
+                        (String) data[8]
+                );
+
+                reservationRepository.save(reservation);
+                reservations.add(reservation);
+        }
+
+        logger.info("Sample reservations created: "+reservations.size());
+
+        return  reservations;
+    }
+
+    private PGSReservation buildReservation(PGSRoom room, PGSUser booker,
+                                            LocalDate checkIn, LocalDate checkOut,
+                                            int guests, BigDecimal totalPrice,
+                                            LocalTime arrival, LocalTime departure,
+                                            String notes) {
+        PGSReservation r = new PGSReservation();
+        r.setRoom(room);
+        r.setBooker(booker);
+        r.setCheckIn(checkIn);
+        r.setCheckOut(checkOut);
+        r.setGuests(guests);
+        r.setTotalPrice(totalPrice);
+        r.setExpectedArrivalTime(arrival);
+        r.setExpectedDepartureTime(departure);
+        r.setNotes(notes);
+        r.setStatus(PGSReservationStatus.PENDING);
+        return r;
     }
 }

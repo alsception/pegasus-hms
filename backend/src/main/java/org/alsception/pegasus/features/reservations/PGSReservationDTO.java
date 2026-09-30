@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
@@ -15,6 +16,8 @@ public class PGSReservationDTO {
 
     private Long roomId;
 
+    private String roomNumber;
+
     private LocalDate checkIn;
 
     private LocalDate checkOut;
@@ -23,9 +26,15 @@ public class PGSReservationDTO {
 
     private LocalTime expectedDepartureTime;
 
+    private Integer guests = 1;
+
     private PGSReservationStatus status;
 
     private BigDecimal totalPrice;
 
     private String notes;
+
+    private LocalDateTime created;
+
+    private LocalDateTime modified;
 }

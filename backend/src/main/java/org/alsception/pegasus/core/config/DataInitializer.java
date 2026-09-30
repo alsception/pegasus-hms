@@ -11,6 +11,7 @@ import org.alsception.pegasus.features.products.PGSProduct;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.alsception.pegasus.features.products.ProductService;
+import org.alsception.pegasus.features.reservations.PGSReservationService;
 import org.alsception.pegasus.features.users.UserDTO;
 import org.alsception.pegasus.features.users.UserService;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 public class DataInitializer implements CommandLineRunner 
 {
     private final ProductService productService;
+    private final PGSReservationService reservationService;
     private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
     
@@ -121,10 +123,11 @@ public class DataInitializer implements CommandLineRunner
             San Servolo Gold 0,75 l|https://imageproxy.wolt.com/menu/menu-images/shared/7c74b550-d719-11ee-8d40-1e90adf8221e_frame_65.png
             """;
 
-    public DataInitializer(ProductService productService, UserService userService) 
+    public DataInitializer(ProductService productService, UserService userService, PGSReservationService reservationService) 
     {
         this.productService = productService;
         this.userService = userService;
+        this.reservationService = reservationService;
     }
 
     //This is executed every time application starts
@@ -136,6 +139,7 @@ public class DataInitializer implements CommandLineRunner
                
         
         //this.processProducts(productsImport);        
+        /*reservationService.createSampleReservations();*/
     }
 
     private void createDefaultUser()

@@ -154,7 +154,7 @@
       on:submit|preventDefault={handleSubmit}
       on:keydown={handleKeydown}
       id="roomForm"
-      class="max-w-[100rem] mx-auto bg-base-100 border border-primary/10 rounded-lg p-8 w-full space-y-8"
+      class="max-w-8xl mx-auto bg-base-100 border border-primary/10 rounded-lg p-8 w-full space-y-8"
     >
       <!-- Header -->
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

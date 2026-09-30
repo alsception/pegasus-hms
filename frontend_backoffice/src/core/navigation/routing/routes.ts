@@ -16,6 +16,7 @@ import RoomAdministration        from "../../../features/products/RoomAdministra
 
 import Tables                       from "../../../features/tables/Tables.svelte";
 import Reservations                 from "../../../features/reservations/Reservations.svelte";
+import Reservation                 from "../../../features/reservations/Reservation.svelte";
 
 import CartDetails                  from "../../../features/cart/CartDetails.svelte";
 import CheckoutDelivery             from "../../../features/cart/CheckoutDelivery.svelte";
@@ -52,6 +53,7 @@ export const components: ComponentRegistry =
     "/inventory/:id": RoomAdministration,
     "/tables": Tables,
     "/reservations": Reservations,
+    "/reservations/:id": Reservation,
     "/users": Users,
     "/users/:id": UserDetails,
     "/users/my-account": MyAccount,     //TODO: Dali da ostavimo /users/my-account ili, ako ne onda mora da bude secured /users endpoint da nebi user dobio nekog ko nije, osim ako nije admin
@@ -97,6 +99,7 @@ export function generateRoutes()
     routes["/stats"] = Stats;
     routes["/artikli"] = Artikli;
     routes["/artikli/:id"] = ArtikliAdministration;
+    routes["/reservations/:id"] = Reservation;
     routes["/users/my-account"] = MyAccount;
     routes["/orders/:id"] = OrderDetails;
     routes["/inventory"] = ProductsAdminList;
