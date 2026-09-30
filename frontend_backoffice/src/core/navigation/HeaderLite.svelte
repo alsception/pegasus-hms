@@ -4,7 +4,7 @@
       <a href="/#/home">
       <!--img src="/logo.png" alt="logo" title="" style="max-width:149px;"-->
       </a>
-            <span class="font-bold text-primary/70">PEGASUS BACKOFFICE</span>
+            <span class="font-bold text-primary/80">PEGASUS BACKOFFICE</span>
 
     </div>
   </div>

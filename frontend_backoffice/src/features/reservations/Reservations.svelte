@@ -10,7 +10,6 @@
   import api from "../../core/services/client";
 
 
-
   type ReservationStatus =
     | "PENDING"
     | "CONFIRMED"
@@ -32,6 +31,8 @@
   let persons: number | null = null;
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  document.title = "Rezervacije | Pegasys HMS";
 
   onMount(async () => {
     await loadReservations();

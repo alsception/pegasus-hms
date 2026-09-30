@@ -110,7 +110,7 @@
     <!-- Navbar -->
     <nav class="navbar w-full bg-base-100 shadow-sm">
       
-      <div class="px-4 font-bold">PEGASUS HMS</div>
+      <div class="px-4 font-bold text-primary">PEGASUS HMS</div>
     </nav>
     <!-- Page content here -->
     <main class="flex-1 overflow-auto main-content w-full p-0 sm:p-6">
