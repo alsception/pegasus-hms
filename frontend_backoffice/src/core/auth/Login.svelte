@@ -4,7 +4,7 @@
   import { push } from "svelte-spa-router";
   import HeaderLite from "../navigation/HeaderLite.svelte";
 
-  document.title = "Log in | Barbacoa Backoffice";
+  document.title = "Log in | Pegasus Backoffice";
 
   let username = "";
   let password = "";
@@ -42,7 +42,7 @@
 
     <form
       on:submit|preventDefault={handleLogin}
-      class="w-full max-w-md relative p-6 px-10 pb-7 m-[5px] rounded-2xl bg-base-content/10 
+      class="w-full max-w-md relative p-6 px-10 pb-7 m-[5px] rounded-2xl bg-base-200 
                  border 
                 border-base-content/20 backdrop-blur-lg /*border border-primary/14*/"
     >
@@ -83,7 +83,7 @@
 
       <button
         type="submit"
-        class="btn w-full mt-2 btn-secondary font-semibold text-lg"
+        class="btn w-full mt-2 btn-primary font-semibold text-lg"
         disabled={loading}
       >
         Login

@@ -108,7 +108,7 @@
   <input id="my-drawer-4" type="checkbox" class="drawer-toggle inline" />
   <div class="drawer-content">
     <!-- Navbar -->
-    <nav class="navbar w-full bg-[color-mix(in oklab, oklch(0.97 0 0) 84%, transparent)] shadow-sm">
+    <nav class="navbar w-full bg-base-100 shadow-sm">
       
       <div class="px-4 font-bold">PEGASUS HMS</div>
     </nav>
