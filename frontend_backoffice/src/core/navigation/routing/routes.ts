@@ -17,6 +17,7 @@ import RoomAdministration        from "../../../features/products/RoomAdministra
 import Tables                       from "../../../features/tables/Tables.svelte";
 import Reservations                 from "../../../features/reservations/Reservations.svelte";
 import Reservation                 from "../../../features/reservations/Reservation.svelte";
+import Calendar                 from "../../../features/reservations/Calendar.svelte";
 
 import CartDetails                  from "../../../features/cart/CartDetails.svelte";
 import CheckoutDelivery             from "../../../features/cart/CheckoutDelivery.svelte";
@@ -106,6 +107,7 @@ export function generateRoutes()
     routes["/pay/:id"] = CheckoutPayment;
     routes["/stripe-checkout"] = StripeCheckout;
     routes["/completion"] = Completition;
+    routes["/calendar"] = Calendar;
 
     //Not found component: This must be last added (order matters), otherwise it catches all
     routes["*"] = NotFound; 

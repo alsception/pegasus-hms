@@ -249,10 +249,11 @@
       on:submit|preventDefault={handleSubmit}
       on:keydown={handleKeydown}
       id="reservationForm"
-      class="max-w-8xl mx-auto bg-base-100 border border-primary/10 rounded-lg p-8 w-full space-y-8"
+      class="max-w-8xl mx-auto rounded-lg p-8 w-full space-y-8"
     >
       <!-- Header -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 
+      bg-base-200 p-6 rounded-xl shadow-sm border border-neutral/20 w-full space-y-2">
         <div>
           <h3 class="text-3xl font-semibold text-primary">
             {ID && ID !== 0 ? "Rezervacija: "+ ID : "Nova rezervacija"}
