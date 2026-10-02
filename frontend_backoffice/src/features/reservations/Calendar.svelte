@@ -12,6 +12,7 @@
   let saving = false;
 
   type Room = {
+    status: any;
     capacity: any;
     pricePerNight: any;
     id: number;
@@ -36,16 +37,25 @@
   const ROOM_WIDTH = 110;
   const DAY_WIDTH = 120;
   const ROW_HEIGHT = 64;
+
   const HOTEL_DAY_START_HOUR = 12;
+
   const DAY_POSITION_OFFSET = DAY_WIDTH / 2;
+
   const RESERVATION_HORIZONTAL_PADDING = 4;
   const RESERVATION_TOTAL_HORIZONTAL_PADDING =
     RESERVATION_HORIZONTAL_PADDING * 2;
+
   const CONTINUES_BEFORE_SYMBOL = "◀";
   const CONTINUES_AFTER_SYMBOL = "▶";
 
-  // Koliko prvih redova (soba) ima tooltip prema dolje
+  // Attention: these are 2 different tooltips!
+
+  // Number of first room rows whose tooltip opens downward
   const TOOLTIP_BELOW_ROWS = 2;
+
+  // Extra space reserved for room tooltips
+  const ROOM_TOOLTIP_OFFSET = 42    ;
 
   const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -54,7 +64,6 @@
   // --------------------------------------------------
 
   let rooms: Room[] = [];
-
   let reservations: Reservation[] = [];
 
   // --------------------------------------------------
@@ -98,8 +107,6 @@
     });
   }
 
-  // Lokalni datum u formatu YYYY-MM-DD (toISOString bi zbog UTC-a
-  // u našoj vremenskoj zoni često vratio prethodni dan)
   function dateKey(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -145,8 +152,7 @@
   }
 
   function isSunday(date: Date): boolean {
-        return date.getDay() === 0;
-
+    return date.getDay() === 0;
   }
 
   // --------------------------------------------------
@@ -189,13 +195,8 @@
 
   function getReservationStart(reservation: Reservation): number {
     const checkIn = parseDate(reservation.checkIn);
-
     const calendarStart = getCalendarStart();
 
-    /*
-     * If the reservation starts before the
-     * displayed period, start it at day 0.
-     */
     const visibleStart = checkIn < calendarStart ? calendarStart : checkIn;
 
     const diff = visibleStart.getTime() - calendarStart.getTime();
@@ -207,13 +208,8 @@
     const checkOut = parseDate(reservation.checkOut);
 
     const calendarStart = getCalendarStart();
-
     const calendarEnd = getCalendarEnd();
 
-    /*
-     * If checkout is after the displayed
-     * period, stop it at the last visible day.
-     */
     const visibleEnd = checkOut > calendarEnd ? calendarEnd : checkOut;
 
     const diff = visibleEnd.getTime() - calendarStart.getTime();
@@ -223,7 +219,6 @@
 
   function getReservationDays(reservation: Reservation): number {
     const start = getReservationStart(reservation);
-
     const end = getReservationEnd(reservation);
 
     return Math.max(1, end - start);
@@ -234,6 +229,7 @@
     const end = getReservationEnd(reservation);
 
     const startsBeforeCalendar = reservationStartsBeforeCalendar(reservation);
+
     const endsAfterCalendar = reservationEndsAfterCalendar(reservation);
 
     const startPosition = startsBeforeCalendar
@@ -247,12 +243,12 @@
     const visibleWidth = endPosition - startPosition;
 
     return `
-            left: ${startPosition + RESERVATION_HORIZONTAL_PADDING}px;
-            width: ${Math.max(
-              0,
-              visibleWidth - RESERVATION_TOTAL_HORIZONTAL_PADDING
-            )}px;
-        `;
+      left: ${startPosition + RESERVATION_HORIZONTAL_PADDING}px;
+      width: ${Math.max(
+        0,
+        visibleWidth - RESERVATION_TOTAL_HORIZONTAL_PADDING
+      )}px;
+    `;
   }
 
   // --------------------------------------------------
@@ -310,25 +306,25 @@
   function getRoomReservations(
     roomId: number,
     list: Reservation[]
-    ): Reservation[] {
+  ): Reservation[] {
     return list.filter((reservation) => reservation.roomId === roomId);
   }
 
   function hasReservationConflict(
     reservation: Reservation,
     list: Reservation[]
-    ): boolean {
+  ): boolean {
     const checkIn = parseDate(reservation.checkIn);
     const checkOut = parseDate(reservation.checkOut);
 
     return list.some((other) => {
-        if (other.id === reservation.id) return false;
-        if (other.roomId !== reservation.roomId) return false;
+      if (other.id === reservation.id) return false;
+      if (other.roomId !== reservation.roomId) return false;
 
-        const otherCheckIn = parseDate(other.checkIn);
-        const otherCheckOut = parseDate(other.checkOut);
+      const otherCheckIn = parseDate(other.checkIn);
+      const otherCheckOut = parseDate(other.checkOut);
 
-        return checkIn < otherCheckOut && checkOut > otherCheckIn;
+      return checkIn < otherCheckOut && checkOut > otherCheckIn;
     });
   }
 
@@ -385,7 +381,9 @@
     return rooms.find((room) => room.id === roomId);
   }
 
-  // --- Nova rezervacija ---
+  // --------------------------------------------------
+  // New reservation
+  // --------------------------------------------------
 
   let showNewModal = false;
   let newRoomId: number | null = null;
@@ -434,40 +432,39 @@
     );
   }
 
-  async function saveNewReservation() 
-  {
+  async function saveNewReservation() {
     if (newRoomId === null || saving) return;
 
     const nights = getNights(newCheckIn, newCheckOut);
 
     const payload = {
-        roomId: newRoomId,
-        guestName: newGuestName.trim(),
-        guestSurname: newGuestSurname.trim(),
-        notes: newNote.trim() || null,
-        checkIn: newCheckIn,
-        checkOut: newCheckOut,
-        pricePerNight: newPricePerNight,
-        totalPrice: nights * newPricePerNight,
+      roomId: newRoomId,
+      guestName: newGuestName.trim(),
+      guestSurname: newGuestSurname.trim(),
+      notes: newNote.trim() || null,
+      checkIn: newCheckIn,
+      checkOut: newCheckOut,
+      pricePerNight: newPricePerNight,
+      totalPrice: nights * newPricePerNight,
     };
 
     saving = true;
 
     try {
-        await api<Reservation>("/reservations", {
+      await api<Reservation>("/reservations", {
         method: "POST",
         body: JSON.stringify(payload),
-        });
+      });
 
-        showSuccessToast("Rezervacija je kreirana");
+      showSuccessToast("Rezervacija je kreirana");
 
-        showNewModal = false;
+      showNewModal = false;
 
-        await fetchReservations();
+      await fetchReservations();
     } catch (err) {
-        alert((err as Error).message);
+      alert((err as Error).message);
     } finally {
-        saving = false;
+      saving = false;
     }
   }
 
@@ -514,53 +511,34 @@
 </script>
 
 <div class="flex flex-col gap-4">
-  <!-- ------------------------------------------------ -->
   <!-- Toolbar -->
-  <!-- ------------------------------------------------ -->
-
   <div class="flex flex-wrap items-center justify-between gap-2">
-  <div>
-    <h2 class="text-xl font-bold">Rezervacije</h2>
+    <div>
+      <h2 class="text-xl font-bold">Rezervacije</h2>
 
-    <p class="text-sm text-base-content/60">
-      Pregled zauzetosti soba
-    </p>
-  </div>
+      <p class="text-sm text-base-content/60">Pregled zauzetosti soba</p>
+    </div>
 
-  <div class="flex items-center gap-8">   
-
-    <button
+    <div class="flex items-center gap-8">
+      <button
         class="btn btn-md btn-ghost"
-        onclick={() => showNewModal = true}
-        >
+        onclick={() => (showNewModal = true)}
+      >
         <i class="fas fa-plus"></i>
         Nova rezervacija
-    </button>
-
-    <div class="join">
-      <button
-        class="btn btn-md join-item"
-        onclick={previousPeriod}
-      >
-        ‹
       </button>
 
-      <button
-        class="btn btn-md join-item"
-        onclick={today}
-      >
-        Danas
-      </button>
+      <div class="join">
+        <button class="btn btn-md join-item" onclick={previousPeriod}>
+          ‹
+        </button>
 
-      <button
-        class="btn btn-md join-item"
-        onclick={nextPeriod}
-      >
-        ›
-      </button>
+        <button class="btn btn-md join-item" onclick={today}> Danas </button>
+
+        <button class="btn btn-md join-item" onclick={nextPeriod}> › </button>
+      </div>
     </div>
   </div>
-</div>
 
   {#if loading}
     <LoadingOverlay />
@@ -568,25 +546,24 @@
     <ErrorDiv {error} />
   {:else}
     {#key startDate.getTime()}
-      <!-- ------------------------------------------------ -->
       <!-- Board -->
-      <!-- ------------------------------------------------ -->
-
-      <div class="overflow-auto rounded-lg border border-base-300 bg-base-100">
+      <div
+        class="overflow-auto rounded-lg border border-base-300 bg-base-100"
+        id="main-calendar-container"
+      >
         <div
           class="relative"
-          style={`width: ${ROOM_WIDTH + dates.length * DAY_WIDTH}px;`}
+          style={`
+            width: ${ROOM_WIDTH + dates.length * DAY_WIDTH}px;
+            padding-bottom: ${ROOM_TOOLTIP_OFFSET}px;
+          `}
         >
-          <!-- ====================================== -->
           <!-- HEADER -->
-          <!-- ====================================== -->
-
           <div
             class="sticky top-0 z-30 flex"
             style={`height: ${ROW_HEIGHT}px;`}
           >
             <!-- Room header -->
-
             <div
               class="sticky left-0 z-40 flex shrink-0 items-center border-b border-r border-base-300 bg-base-200 px-3 font-bold"
               style={`width: ${ROOM_WIDTH}px;`}
@@ -595,16 +572,13 @@
             </div>
 
             <!-- Date headers -->
-
             {#each dates as date}
               <div
-                class={`flex shrink-0 flex-col items-center justify-center border-b border-r border-base-300 
-                ${
+                class={`flex shrink-0 flex-col items-center justify-center border-b border-r border-base-300 ${
                   isSunday(date)
-                    ? "bg-error/20 text-error-content"
+                    ? "bg-error/20 text-primary/80"
                     : "bg-base-200"
-                }}
-                ${
+                } ${
                   isToday(date)
                     ? "bg-primary text-primary-content"
                     : "bg-base-200"
@@ -622,60 +596,124 @@
             {/each}
           </div>
 
-          <!-- ====================================== -->
           <!-- ROOMS -->
-          <!-- ====================================== -->
-
           {#each rooms as room, roomIndex}
             <div class="relative flex" style={`height: ${ROW_HEIGHT}px;`}>
               <!-- Room -->
-
               <div
-                class="sticky left-0 z-41 flex shrink-0 flex-col justify-center border-b border-r border-base-300 bg-base-100 px-3"
+                class="group relative sticky left-0 z-41 flex shrink-0 flex-col justify-center border-b border-r border-base-300 bg-base-100 px-3 hover:bg-info/10"
                 style={`width: ${ROOM_WIDTH}px;`}
               >
-                <span class="font-bold">
+                <!-- Room number -->
+                <span class="text-lg font-bold leading-tight">
                   {room.roomNumber}
                 </span>
 
-                <span class="text-xs text-base-content/50">
-                  {room.type}
-                </span>
+                <!-- Price + capacity -->
+                <div
+                  class="mt-1 flex items-center gap-2 text-xs text-base-content/80"
+                >
+                  <span class="font-medium">
+                    € {room.pricePerNight}
+                  </span>
 
-                <span class="text-xs text-base-content/50">
-                  € {room.pricePerNight} <i class="fas fa-user w-3"></i>
-                  {room.capacity}
-                </span>
+                  <span class="flex items-center gap-1">
+                    <i class="fas fa-user text-[10px] text-base-content/60"></i>
+
+                    {room.capacity}
+                  </span>
+                </div>
+
+                <!-- Room tooltip -->
+                <div
+                  class={`pointer-events-none absolute left-full z-50 ml-2 w-64 rounded-lg border border-base-300 bg-base-100 p-4 shadow-xl opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
+                    roomIndex < TOOLTIP_BELOW_ROWS
+                      ? "top-full -translate-y-1/2"
+                      : "bottom-full translate-y-1/2"
+                  }`}
+                >
+                  <div
+                    class="mb-3 flex items-center gap-2 border-b border-base-300 pb-2"
+                  >
+                    <i class="fas fa-door-open text-base-content/60"></i>
+
+                    <span class="font-bold">
+                      Soba {room.roomNumber}
+                    </span>
+                  </div>
+
+                  <div class="space-y-2 text-sm">
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="text-base-content/60"> Tip sobe </span>
+
+                      <span class="font-medium">
+                        {room.type}
+                      </span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="text-base-content/60"> Kat </span>
+
+                      <span class="font-medium">
+                        {room.floor}
+                      </span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="text-base-content/60"> Kapacitet </span>
+
+                      <span class="font-medium">
+                        <i class="fas fa-user mr-1 text-xs text-base-content/50"
+                        ></i>
+
+                        {room.capacity}
+                      </span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="text-base-content/60"> Cijena / noć </span>
+
+                      <span class="font-semibold">
+                        € {room.pricePerNight}
+                      </span>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                      <span class="text-base-content/60"> Status </span>
+
+                      <span class="font-semibold">
+                        {room.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Calendar -->
-
               <div
                 class="relative shrink-0"
                 style={`width: ${dates.length * DAY_WIDTH}px;`}
               >
                 <!-- Grid -->
-
                 <div class="absolute inset-0 flex">
                   {#each dates as date}
                     <button
-                        class={`group h-full shrink-0 border-b border-r border-base-300 transition hover:bg-base-200 ${
-                            isToday(date) ? "bg-primary/5" : ""
-                        }`}
-                        style={`width: ${DAY_WIDTH}px;`}
-                        aria-label={`Nova rezervacija za sobu ${room.roomNumber} ${formatDate(date)}`}
-                        onclick={() => handleEmptyCellClick(room, date)}
-                        >
-                        <i
-                            class="fas fa-plus text-base-content/40 opacity-0 transition-opacity group-hover:opacity-100"
-                            aria-hidden="true"
-                        ></i>
+                      class={`group h-full shrink-0 border-b border-r border-base-300 transition hover:bg-base-200 ${
+                        isToday(date) ? "bg-primary/5" : ""
+                      }`}
+                      style={`width: ${DAY_WIDTH}px;`}
+                      aria-label={`Nova rezervacija za sobu ${room.roomNumber} ${formatDate(date)}`}
+                      onclick={() => handleEmptyCellClick(room, date)}
+                    >
+                      <i
+                        class="fas fa-plus text-base-content/40 opacity-0 transition-opacity group-hover:opacity-100"
+                        aria-hidden="true"
+                      ></i>
                     </button>
                   {/each}
                 </div>
 
                 <!-- Today line -->
-
                 {#each dates as date, index}
                   {#if isToday(date)}
                     <div
@@ -686,7 +724,6 @@
                 {/each}
 
                 <!-- Reservations -->
-
                 {#each getRoomReservations(room.id, reservations) as reservation (reservation.id)}
                   <div
                     class="absolute top-1 z-30 h-[56px] hover:z-50"
@@ -695,23 +732,23 @@
                     <div
                       role="button"
                       tabindex="0"
-                      class={`group relative flex h-full w-full cursor-pointer flex-col justify-center overflow-visible rounded-md px-3 text-left 
-                      shadow-sm transition hover:brightness-95 hover:ring-3 hover:ring-info ${
+                      class={`group relative flex h-full w-full cursor-pointer flex-col justify-center overflow-visible rounded-md px-3 text-left shadow-sm transition hover:brightness-95 hover:ring-3 hover:ring-info ${
                         hasReservationConflict(reservation, reservations)
-                        ? "bg-error text-error-content ring-2 ring-error ring-offset-1"
+                          ? "bg-error text-error-content ring-2 ring-error ring-offset-1"
                           : getStatusClass(reservation.status)
                       }`}
                       onclick={() => handleReservationClick(reservation)}
                       onkeydown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
+
                           handleReservationClick(reservation);
                         }
                       }}
                     >
-                      <!-- Tooltip: prva dva reda dolje, ostali gore -->
+                      <!-- Reservation tooltip -->
                       <div
-                        class={`pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-lg border border-base-300 bg-base-300 p-3 text-left text-base-content opacity-0 shadow-2xl transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 ${
+                        class={`pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-lg border border-base-100 bg-base-300 p-3 text-left text-base-content opacity-0 shadow-2xl transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 ${
                           roomIndex < TOOLTIP_BELOW_ROWS
                             ? "top-full mt-2"
                             : "bottom-full mb-2"
@@ -721,39 +758,45 @@
                           <div class="font-bold text-primary">
                             Soba {room.roomNumber}
                           </div>
+
                           <div>
-                            <span class="opacity-60">Gost:</span>
-                            <span class="font-semibold"
-                              >{reservation.bookerId}</span
-                            >
+                            <span class="opacity-60"> Gost: </span>
+
+                            <span class="font-semibold">
+                              {reservation.bookerId}
+                            </span>
                           </div>
+
                           <div>
-                            <span class="opacity-60">Check-in:</span>
-                            <span class="font-semibold"
-                              >{formatDate(
-                                parseDate(reservation.checkIn)
-                              )}</span
-                            >
+                            <span class="opacity-60"> Check-in: </span>
+
+                            <span class="font-semibold">
+                              {formatDate(parseDate(reservation.checkIn))}
+                            </span>
                           </div>
+
                           <div>
-                            <span class="opacity-60">Check-out:</span>
-                            <span class="font-semibold"
-                              >{formatDate(
-                                parseDate(reservation.checkOut)
-                              )}</span
-                            >
+                            <span class="opacity-60"> Check-out: </span>
+
+                            <span class="font-semibold">
+                              {formatDate(parseDate(reservation.checkOut))}
+                            </span>
                           </div>
+
                           <div>
-                            <span class="opacity-60">Status:</span>
-                            <span class="font-semibold"
-                              >{getStatusLabel(reservation.status)}</span
-                            >
+                            <span class="opacity-60"> Status: </span>
+
+                            <span class="font-semibold">
+                              {getStatusLabel(reservation.status)}
+                            </span>
                           </div>
+
                           <div>
-                            <span class="opacity-60">Napomena:</span>
-                            <span class="font-semibold"
-                              >{reservation.notes}</span
-                            >
+                            <span class="opacity-60"> Napomena: </span>
+
+                            <span class="font-semibold">
+                              {reservation.notes}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -795,10 +838,7 @@
       </div>
     {/key}
 
-    <!-- ------------------------------------------------ -->
     <!-- Legend -->
-    <!-- ------------------------------------------------ -->
-
     <div class="flex flex-wrap gap-4 text-sm">
       <div class="flex items-center gap-2">
         <span class="h-3 w-3 rounded bg-warning"></span>
@@ -832,191 +872,179 @@
   <!-- ------------------------------------------------ -->
 
   {#if selectedReservation}
-
     {@const room = getRoomById(selectedReservation.roomId)}
 
     <div class="modal modal-open" role="dialog" aria-modal="true">
-        <div class="modal-box max-w-2xl bg-base-200 p-0">
-
+      <div class="modal-box max-w-2xl bg-base-200 p-0">
         <!-- Header -->
         <div
-            class="flex items-center justify-between border-b border-base-300 bg-base-300 px-6 py-4"
+          class="flex items-center justify-between border-b border-base-300 bg-base-300 px-6 py-4"
         >
-            <div>
+          <div>
             <h3 class="text-lg font-bold">
-                Rezervacija #{selectedReservation.id}
+              Rezervacija #{selectedReservation.id}
             </h3>
-            </div>
+          </div>
 
-            <button
+          <button
             type="button"
             class="btn btn-sm btn-circle btn-ghost"
             aria-label="Zatvori"
             onclick={closeModal}
-            >
+          >
             <i class="fas fa-xmark"></i>
-            </button>
+          </button>
         </div>
 
         <!-- Body -->
         <div class="p-8">
-
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <!-- Room -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-door-open text-xs text-gray-400 mr-1"></i>
+                  Soba
+                </span>
+              </span>
 
-                <!-- Room -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-door-open text-xs text-gray-400 mr-1"></i>
-                            Soba
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={selectedReservation.roomNumber}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={selectedReservation.roomNumber}
-                        disabled
-                    />
-                </label>
+            <!-- Guest -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-user text-xs text-gray-400 mr-1"></i>
+                  Gost
+                </span>
+              </span>
 
-                <!-- Guest -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-user text-xs text-gray-400 mr-1"></i>
-                            Gost
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={selectedReservation.bookerId}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={selectedReservation.bookerId}
-                        disabled
-                    />
-                </label>
+            <!-- Check-in -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-calendar-check text-xs text-gray-400 mr-1"
+                  ></i>
+                  Check-in
+                </span>
+              </span>
 
-                <!-- Check-in -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-calendar-check text-xs text-gray-400 mr-1"></i>
-                            Check-in
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={formatDate(parseDate(selectedReservation.checkIn))}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={formatDate(parseDate(selectedReservation.checkIn))}
-                        disabled
-                    />
-                </label>
+            <!-- Check-out -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-calendar-xmark text-xs text-gray-400 mr-1"
+                  ></i>
+                  Check-out
+                </span>
+              </span>
 
-                <!-- Check-out -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-calendar-xmark text-xs text-gray-400 mr-1"></i>
-                            Check-out
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={formatDate(parseDate(selectedReservation.checkOut))}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={formatDate(parseDate(selectedReservation.checkOut))}
-                        disabled
-                    />
-                </label>
+            <!-- Status -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-info-circle text-xs text-gray-400 mr-1"></i>
+                  Status
+                </span>
+              </span>
 
-                <!-- Status -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-info-circle text-xs text-gray-400 mr-1"></i>
-                            Status
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={getStatusLabel(selectedReservation.status)}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={getStatusLabel(selectedReservation.status)}
-                        disabled
-                    />
-                </label>
+            <!-- Total price -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-euro-sign text-xs text-gray-400 mr-1"></i>
+                  Ukupna cijena (EUR)
+                </span>
+              </span>
 
-                <!-- Total price -->
-                <label class="form-control">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-euro-sign text-xs text-gray-400 mr-1"></i>
-                            Ukupna cijena (EUR)
-                        </span>
-                    </span>
+              <input
+                type="text"
+                class="pgs-input"
+                value={`${Number(selectedReservation.totalPrice).toFixed(2)} €`}
+                disabled
+              />
+            </label>
 
-                    <input
-                        type="text"
-                        class="pgs-input"
-                        value={`${Number(selectedReservation.totalPrice).toFixed(2)} €`}
-                        disabled
-                    />
-                </label>
+            <!-- Notes -->
+            <label class="form-control md:col-span-2">
+              <span class="label">
+                <span class="label-text">
+                  <i class="fas fa-sticky-note text-xs text-gray-400 mr-1"></i>
+                  Napomena
+                </span>
+              </span>
 
-                <!-- Notes -->
-                <label class="form-control md:col-span-2">
-                    <span class="label">
-                        <span class="label-text">
-                            <i class="fas fa-sticky-note text-xs text-gray-400 mr-1"></i>
-                            Napomena
-                        </span>
-                    </span>
+              <textarea
+                class="pgs-input"
+                rows="3"
+                value={selectedReservation.notes ?? ""}
+                disabled
+              ></textarea>
+            </label>
 
-                    <textarea
-                        class="pgs-input"
-                        rows="3"
-                        value={selectedReservation.notes ?? ""}
-                        disabled
-                    ></textarea>
-                </label>
-
-                <!-- Open reservation -->
-                <div class="flex items-end md:col-span-2">
-                    <a
-                        href={`#/reservations/${selectedReservation.id}`}
-                        use:link
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="pgs-hyperlink"
-                    >
-                        <i class="fas fa-arrow-up-right-from-square mr-1"></i>
-                        Otvori rezervaciju
-                    </a>
-                </div>
-
+            <!-- Open reservation -->
+            <div class="flex items-end md:col-span-2">
+              <a
+                href={`#/reservations/${selectedReservation.id}`}
+                use:link
+                target="_blank"
+                rel="noopener noreferrer"
+                class="pgs-hyperlink"
+              >
+                <i class="fas fa-arrow-up-right-from-square mr-1"></i>
+                Otvori detalje rezervacije
+              </a>
             </div>
-            
-            <div class="mt-6 flex justify-end">
-            <button
-                type="button"
-                class="btn btn-ghost"
-                onclick={closeModal}
-            >
-                Zatvori
+          </div>
+
+          <div class="mt-6 flex justify-end">
+            <button type="button" class="btn btn-ghost" onclick={closeModal}>
+              Zatvori
             </button>
-            </div>
-
+          </div>
         </div>
-        </div>
+      </div>
 
-        <!-- Klik na pozadinu zatvara modal -->
-        <button
-        class="modal-backdrop"
-        aria-label="Zatvori"
-        onclick={closeModal}
-        ></button>
+      <button class="modal-backdrop" aria-label="Zatvori" onclick={closeModal}
+      ></button>
     </div>
   {/if}
 
@@ -1026,201 +1054,206 @@
 
   {#if showNewModal}
     {@const nights = getNights(newCheckIn, newCheckOut)}
-    {@const isNew = newCheckIn == '' && newCheckOut == ''}
-    {@const invalidDates = !isNew && (nights < 1)}
+
+    {@const isNew = newCheckIn == "" && newCheckOut == ""}
+
+    {@const invalidDates = !isNew && nights < 1}
+
     {@const conflict =
       newRoomId !== null &&
       !invalidDates &&
       hasNewReservationConflict(newRoomId, newCheckIn, newCheckOut)}
 
     <div class="modal modal-open" role="dialog" aria-modal="true">
-  <div class="modal-box max-w-2xl bg-base-200 p-0">
+      <div class="modal-box max-w-2xl bg-base-200 p-0">
+        <!-- Header -->
+        <div
+          class="flex items-center justify-between border-b border-base-300 bg-info/30 px-6 py-4"
+        >
+          <h2 class="text-lg font-bold">
+            <i class="fas fa-calendar-plus mr-2"></i>
+            Nova rezervacija
+          </h2>
 
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-base-300 bg-info/30 px-6 py-4">
-      <h2 class="text-lg font-bold">
-        <i class="fas fa-calendar-plus mr-2"></i>
-        Nova rezervacija
-      </h2>
+          <button
+            type="button"
+            class="btn btn-sm btn-circle btn-ghost"
+            aria-label="Zatvori"
+            onclick={closeModal}
+          >
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
 
-      <button
-        type="button"
-        class="btn btn-sm btn-circle btn-ghost"
-        aria-label="Zatvori"
-        onclick={closeModal}
-      >
-        <i class="fas fa-xmark"></i>
-      </button>
-    </div>
+        <!-- Body -->
+        <div class="p-8">
+          <form
+            class="grid grid-cols-1 gap-4 md:grid-cols-2"
+            onsubmit={(e) => {
+              e.preventDefault();
 
-    <!-- Body -->
-    <div class="p-8">
-      <form
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
-        onsubmit={(e) => {
-          e.preventDefault();
-          if (!invalidDates && !conflict) saveNewReservation();
-        }}
-      >
-          <!-- Room -->
-          <label class="form-control md:col-span-2">
-            <span class="label">
-              <span class="label-text">Soba</span>
-            </span>
+              if (!invalidDates && !conflict) {
+                saveNewReservation();
+              }
+            }}
+          >
+            <!-- Room -->
+            <label class="form-control md:col-span-2">
+              <span class="label">
+                <span class="label-text"> Soba </span>
+              </span>
 
-            <select
-              class="pgs-input"
-              value={newRoomId}
-              onchange={(e) =>
-                handleNewRoomChange(Number(e.currentTarget.value))}
-            >
-              {#each rooms as r}
-                <option value={r.id}>
-                  {r.roomNumber} — {r.type} (€ {r.pricePerNight})
-                </option>
-              {/each}
-            </select>
-          </label>
+              <select
+                class="pgs-input"
+                value={newRoomId}
+                onchange={(e) =>
+                  handleNewRoomChange(Number(e.currentTarget.value))}
+              >
+                {#each rooms as r}
+                  <option value={r.id}>
+                    {r.roomNumber} — {r.type}
+                    (€ {r.pricePerNight})
+                  </option>
+                {/each}
+              </select>
+            </label>
 
-          <!-- Date From -->
-          <label class="form-control">
-            <span class="label">
-              <span class="label-text">Datum od</span>
-            </span>
+            <!-- Date From -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text"> Datum od </span>
+              </span>
 
-            <input type="date" class="pgs-input" bind:value={newCheckIn} />
-          </label>
+              <input type="date" class="pgs-input" bind:value={newCheckIn} />
+            </label>
 
-          <!-- Date To -->
-          <label class="form-control">
-            <span class="label">
-              <span class="label-text">Datum do</span>
-            </span>
+            <!-- Date To -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text"> Datum do </span>
+              </span>
 
-            <input type="date" class="pgs-input" bind:value={newCheckOut} />
-          </label>
+              <input type="date" class="pgs-input" bind:value={newCheckOut} />
+            </label>
 
+            <!-- Guest name -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text"> Ime </span>
+              </span>
 
-          <!-- Guest name -->
-          <label class="form-control">
-            <span class="label">
-              <span class="label-text">Ime</span>
-            </span>
+              <input
+                type="text"
+                class="pgs-input"
+                required
+                bind:value={newGuestName}
+              />
+            </label>
 
-            <input
-              type="text"
-              class="pgs-input"
-              required
-              bind:value={newGuestName}
-            />
-          </label>
+            <!-- Guest surname -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text"> Prezime </span>
+              </span>
 
-          <!-- Guest surname -->
-          <label class="form-control">
-            <span class="label">
-              <span class="label-text">Prezime</span>
-            </span>
+              <input
+                type="text"
+                class="pgs-input"
+                bind:value={newGuestSurname}
+              />
+            </label>
 
-            <input
-              type="text"
-              class="pgs-input"
-              bind:value={newGuestSurname}
-            />
-          </label>
+            <!-- Price per night -->
+            <label class="form-control">
+              <span class="label">
+                <span class="label-text"> Cijena po noći (EUR) </span>
+              </span>
 
-          <!-- Price per night -->
-          <label class="form-control">
-            <span class="label">
-              <span class="label-text">Cijena po noći (EUR)</span>
-            </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                class="pgs-input"
+                placeholder="0.00"
+                bind:value={newPricePerNight}
+              />
+            </label>
 
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              class="pgs-input"
-              placeholder="0.00"
-              bind:value={newPricePerNight}
-            />
-          </label>
-
-          <!-- Total -->
+            <!-- Total -->
             <div class="form-control">
-            <span class="label w-full justify-end">
-                <span class="label-text">Ukupno</span>
-            </span>
+              <span class="label w-full justify-end">
+                <span class="label-text"> Ukupno </span>
+              </span>
 
-            <div class="flex h-full w-full items-center justify-end gap-2 px-1 text-right">
+              <div
+                class="flex h-full w-full items-center justify-end gap-2 px-1 text-right"
+              >
                 <span class="text-lg font-bold">
-                € {(Math.max(nights, 0) * (newPricePerNight || 0)).toFixed(2)}
+                  € {(Math.max(nights, 0) * (newPricePerNight || 0)).toFixed(2)}
                 </span>
 
                 <span class="text-sm opacity-60">
-                ({Math.max(nights, 0)}
-                {nights === 1 ? "noć" : "noći"})
+                  ({Math.max(nights, 0)}
+                  {nights === 1 ? "noć" : "noći"})
                 </span>
+              </div>
             </div>
-            </div>
 
-          <!-- Note -->
-          <label class="form-control md:col-span-2">
-            <span class="label">
-              <span class="label-text">Napomena</span>
-            </span>
+            <!-- Note -->
+            <label class="form-control md:col-span-2">
+              <span class="label">
+                <span class="label-text"> Napomena </span>
+              </span>
 
-            <textarea
-              class="pgs-input"
-              rows="3"
-              bind:value={newNote}
-            ></textarea>
-          </label>
+              <textarea class="pgs-input" rows="3" bind:value={newNote}
+              ></textarea>
+            </label>
 
-          {#if invalidDates}
-            <div class="text-sm text-error md:col-span-2">
-              Datum do mora biti nakon datuma od.
-            </div>
-          {:else if conflict}
-            <div class="text-sm text-error md:col-span-2">
-              Soba je već zauzeta u odabranom razdoblju.
-            </div>
-          {/if}
+            {#if invalidDates}
+              <div class="text-sm text-error md:col-span-2">
+                Datum do mora biti nakon datuma od.
+              </div>
+            {:else if conflict}
+              <div class="text-sm text-error md:col-span-2">
+                Soba je već zauzeta u odabranom razdoblju.
+              </div>
+            {/if}
 
-          <!-- Buttons -->
-          <div class="mt-2 flex justify-end gap-2 md:col-span-2">
-            <button type="button" class="btn btn-ghost" onclick={closeModal}>
-              <i class="fas fa-xmark"></i>
-              Odustani
-            </button>
+            <!-- Buttons -->
+            <div class="mt-2 flex justify-end gap-2 md:col-span-2">
+              <button type="button" class="btn btn-ghost" onclick={closeModal}>
+                <i class="fas fa-xmark"></i>
+                Odustani
+              </button>
 
-            <button
+              <button
                 type="submit"
                 class="btn btn-primary"
                 disabled={invalidDates || conflict || saving}
-                >
+              >
                 {#if saving}
-                    <span class="loading loading-spinner loading-sm"></span>
+                  <span class="loading loading-spinner loading-sm"></span>
                 {:else}
-                    <i class="fas fa-check"></i>
+                  <i class="fas fa-check"></i>
                 {/if}
+
                 Spremi
-            </button>
-          </div>
-              </form>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <button class="modal-backdrop" aria-label="Zatvori" onclick={closeModal}
+      ></button>
     </div>
-
-  </div>
-
-  <button
-    class="modal-backdrop"
-    aria-label="Zatvori"
-    onclick={closeModal}
-  ></button>
-</div>
   {/if}
 </div>
 
 <svelte:window
   onkeydown={(e) => {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") {
+      closeModal();
+    }
   }}
 />
