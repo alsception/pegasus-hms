@@ -659,13 +659,18 @@
                 <div class="absolute inset-0 flex">
                   {#each dates as date}
                     <button
-                      class={`h-full shrink-0 border-b border-r border-base-300 transition hover:bg-base-200 ${
-                        isToday(date) ? "bg-primary/5" : ""
-                      }`}
-                      style={`width: ${DAY_WIDTH}px;`}
-                      aria-label={`Nova rezervacija za sobu ${room.roomNumber} ${formatDate(date)}`}
-                      onclick={() => handleEmptyCellClick(room, date)}
-                    ></button>
+                        class={`group h-full shrink-0 border-b border-r border-base-300 transition hover:bg-base-200 ${
+                            isToday(date) ? "bg-primary/5" : ""
+                        }`}
+                        style={`width: ${DAY_WIDTH}px;`}
+                        aria-label={`Nova rezervacija za sobu ${room.roomNumber} ${formatDate(date)}`}
+                        onclick={() => handleEmptyCellClick(room, date)}
+                        >
+                        <i
+                            class="fas fa-plus text-base-content/40 opacity-0 transition-opacity group-hover:opacity-100"
+                            aria-hidden="true"
+                        ></i>
+                    </button>
                   {/each}
                 </div>
 
@@ -690,7 +695,8 @@
                     <div
                       role="button"
                       tabindex="0"
-                      class={`group relative flex h-full w-full cursor-pointer flex-col justify-center overflow-visible rounded-md px-3 text-left shadow-sm transition hover:brightness-95 ${
+                      class={`group relative flex h-full w-full cursor-pointer flex-col justify-center overflow-visible rounded-md px-3 text-left 
+                      shadow-sm transition hover:brightness-95 hover:ring-3 hover:ring-info ${
                         hasReservationConflict(reservation, reservations)
                         ? "bg-error text-error-content ring-2 ring-error ring-offset-1"
                           : getStatusClass(reservation.status)
@@ -741,6 +747,12 @@
                             <span class="opacity-60">Status:</span>
                             <span class="font-semibold"
                               >{getStatusLabel(reservation.status)}</span
+                            >
+                          </div>
+                          <div>
+                            <span class="opacity-60">Napomena:</span>
+                            <span class="font-semibold"
+                              >{reservation.notes}</span
                             >
                           </div>
                         </div>
@@ -820,56 +832,191 @@
   <!-- ------------------------------------------------ -->
 
   {#if selectedReservation}
+
     {@const room = getRoomById(selectedReservation.roomId)}
 
     <div class="modal modal-open" role="dialog" aria-modal="true">
-      <div class="modal-box">
-        <h3 class="text-lg font-bold">
-          Rezervacija{room ? ` — soba ${room.roomNumber}` : ""}
-        </h3>
+        <div class="modal-box max-w-2xl bg-base-200 p-0">
 
-        <div class="mt-4 flex flex-col gap-2 text-sm">
-          <div>
-            <span class="opacity-60">Gost:</span>
-            <span class="font-semibold">{selectedReservation.bookerId}</span>
-          </div>
-          <div>
-            <span class="opacity-60">Check-in:</span>
-            <span class="font-semibold"
-              >{formatDate(parseDate(selectedReservation.checkIn))}</span
+        <!-- Header -->
+        <div
+            class="flex items-center justify-between border-b border-base-300 bg-base-300 px-6 py-4"
+        >
+            <div>
+            <h3 class="text-lg font-bold">
+                Rezervacija #{selectedReservation.id}
+            </h3>
+            </div>
+
+            <button
+            type="button"
+            class="btn btn-sm btn-circle btn-ghost"
+            aria-label="Zatvori"
+            onclick={closeModal}
             >
-          </div>
-          <div>
-            <span class="opacity-60">Check-out:</span>
-            <span class="font-semibold"
-              >{formatDate(parseDate(selectedReservation.checkOut))}</span
-            >
-          </div>
-          <div>
-            <span class="opacity-60">Status:</span>
-            <span class="font-semibold"
-              >{getStatusLabel(selectedReservation.status)}</span
-            >
-          </div>
-          <div>
-            <span class="opacity-60">Cena:</span>
-            <span class="font-semibold"
-              >{selectedReservation.totalPrice} EUR</span
-            >
-          </div>
+            <i class="fas fa-xmark"></i>
+            </button>
         </div>
 
-        <div class="modal-action">
-          <button class="btn btn-ghost" onclick={closeModal}>Zatvori</button>
-        </div>
-      </div>
+        <!-- Body -->
+        <div class="p-8">
 
-      <!-- Klik na pozadinu zatvara modal -->
-      <button
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                <!-- Room -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-door-open text-xs text-gray-400 mr-1"></i>
+                            Soba
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={selectedReservation.roomNumber}
+                        disabled
+                    />
+                </label>
+
+                <!-- Guest -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-user text-xs text-gray-400 mr-1"></i>
+                            Gost
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={selectedReservation.bookerId}
+                        disabled
+                    />
+                </label>
+
+                <!-- Check-in -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-calendar-check text-xs text-gray-400 mr-1"></i>
+                            Check-in
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={formatDate(parseDate(selectedReservation.checkIn))}
+                        disabled
+                    />
+                </label>
+
+                <!-- Check-out -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-calendar-xmark text-xs text-gray-400 mr-1"></i>
+                            Check-out
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={formatDate(parseDate(selectedReservation.checkOut))}
+                        disabled
+                    />
+                </label>
+
+                <!-- Status -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-info-circle text-xs text-gray-400 mr-1"></i>
+                            Status
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={getStatusLabel(selectedReservation.status)}
+                        disabled
+                    />
+                </label>
+
+                <!-- Total price -->
+                <label class="form-control">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-euro-sign text-xs text-gray-400 mr-1"></i>
+                            Ukupna cijena (EUR)
+                        </span>
+                    </span>
+
+                    <input
+                        type="text"
+                        class="pgs-input"
+                        value={`${Number(selectedReservation.totalPrice).toFixed(2)} €`}
+                        disabled
+                    />
+                </label>
+
+                <!-- Notes -->
+                <label class="form-control md:col-span-2">
+                    <span class="label">
+                        <span class="label-text">
+                            <i class="fas fa-sticky-note text-xs text-gray-400 mr-1"></i>
+                            Napomena
+                        </span>
+                    </span>
+
+                    <textarea
+                        class="pgs-input"
+                        rows="3"
+                        value={selectedReservation.notes ?? ""}
+                        disabled
+                    ></textarea>
+                </label>
+
+                <!-- Open reservation -->
+                <div class="flex items-end md:col-span-2">
+                    <a
+                        href={`#/reservations/${selectedReservation.id}`}
+                        use:link
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="pgs-hyperlink"
+                    >
+                        <i class="fas fa-arrow-up-right-from-square mr-1"></i>
+                        Otvori rezervaciju
+                    </a>
+                </div>
+
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+            <button
+                type="button"
+                class="btn btn-ghost"
+                onclick={closeModal}
+            >
+                Zatvori
+            </button>
+            </div>
+
+        </div>
+        </div>
+
+        <!-- Klik na pozadinu zatvara modal -->
+        <button
         class="modal-backdrop"
         aria-label="Zatvori"
         onclick={closeModal}
-      ></button>
+        ></button>
     </div>
   {/if}
 
@@ -879,26 +1026,42 @@
 
   {#if showNewModal}
     {@const nights = getNights(newCheckIn, newCheckOut)}
-    {@const invalidDates = nights < 1}
+    {@const isNew = newCheckIn == '' && newCheckOut == ''}
+    {@const invalidDates = !isNew && (nights < 1)}
     {@const conflict =
       newRoomId !== null &&
       !invalidDates &&
       hasNewReservationConflict(newRoomId, newCheckIn, newCheckOut)}
 
     <div class="modal modal-open" role="dialog" aria-modal="true">
-      <div class="modal-box max-w-2xl bg-base-200 p-8">
-        <h2 class="card-title mb-4 text-lg">
-          <i class="fas fa-plus"></i>
-          Nova rezervacija
-        </h2>
+  <div class="modal-box max-w-2xl bg-base-200 p-0">
 
-        <form
-          class="grid grid-cols-1 gap-4 md:grid-cols-2"
-          onsubmit={(e) => {
-            e.preventDefault();
-            if (!invalidDates && !conflict) saveNewReservation();
-          }}
-        >
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-base-300 bg-info/30 px-6 py-4">
+      <h2 class="text-lg font-bold">
+        <i class="fas fa-calendar-plus mr-2"></i>
+        Nova rezervacija
+      </h2>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-circle btn-ghost"
+        aria-label="Zatvori"
+        onclick={closeModal}
+      >
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-8">
+      <form
+        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        onsubmit={(e) => {
+          e.preventDefault();
+          if (!invalidDates && !conflict) saveNewReservation();
+        }}
+      >
           <!-- Room -->
           <label class="form-control md:col-span-2">
             <span class="label">
@@ -1042,15 +1205,17 @@
                 Spremi
             </button>
           </div>
-        </form>
-      </div>
-
-      <button
-        class="modal-backdrop"
-        aria-label="Zatvori"
-        onclick={closeModal}
-      ></button>
+              </form>
     </div>
+
+  </div>
+
+  <button
+    class="modal-backdrop"
+    aria-label="Zatvori"
+    onclick={closeModal}
+  ></button>
+</div>
   {/if}
 </div>
 
