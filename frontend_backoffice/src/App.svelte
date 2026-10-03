@@ -137,7 +137,7 @@
   </div>
 
   <!-- Sidebar -->
-  <div class="drawer-side is-drawer-close:overflow-visible">
+  <div class="drawer-side is-drawer-close:overflow-visible z-150">
 
     <label
       for="my-drawer"
