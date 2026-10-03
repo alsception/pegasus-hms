@@ -104,48 +104,90 @@
 <Header/> 
 </div>
 
-<div class="drawer lg:drawer-open">
-  <input id="my-drawer-4" type="checkbox" class="drawer-toggle inline" />
+<div class="drawer md:drawer-open">
+
+  <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+
   <div class="drawer-content">
+    
     <!-- Navbar -->
     <nav class="navbar w-full bg-base-100 shadow-sm">
-      
-      <div class="px-4 font-bold text-primary">PEGASUS HMS</div>
+
+      <!-- Mobile / tablet menu button -->
+      <label
+        for="my-drawer"
+        aria-label="open sidebar"
+        class="btn btn-square btn-ghost drawer-button md:hidden"
+
+      >
+        <i class="fas fa-bars text-xl"></i>        
+      </label>
+
+      <div class="px-4 font-bold text-primary">
+        PEGASUS HMS
+      </div>
+
     </nav>
-    <!-- Page content here -->
+
+    <!-- Main content goes here inside routes-->
     <main class="flex-1 overflow-auto main-content w-full p-0 sm:p-6">
-      <Router {routes} />  
+      <Router {routes} />
     </main>
+
   </div>
 
+  <!-- Sidebar -->
   <div class="drawer-side is-drawer-close:overflow-visible">
-    <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
-    <div class="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
-      <!-- Sidebar content here -->
+
+    <label
+      for="my-drawer"
+      aria-label="close sidebar"
+      class="drawer-overlay"
+    ></label>
+
+    <div
+      class="flex min-h-full flex-col items-start bg-base-200
+             is-drawer-close:w-14
+             is-drawer-open:w-60"
+    >
+
       <ul class="menu w-full grow">
-      <label for="my-drawer-4" aria-label="open sidebar" class="btn btn-square btn-ghost drawer-button ml-auto">
-        <!-- Sidebar toggle icon -->
-        <i class="fas fa-bars text-xl mr-2"></i>
-      </label>
-        <!-- List items -->
+
+        <!-- Sidebar toggle -->
+        <label
+          for="my-drawer"
+          aria-label="toggle sidebar"
+          class="btn btn-square btn-ghost drawer-button"
+        >
+          <i class="fas fa-bars text-xl"></i>
+        </label>
+
         {#each navItems as item}
-        <li>
-          <a
-            use:link
-            href={item.disabled ? "#" : item.href}
-            class="is-drawer-close:tooltip is-drawer-close:tooltip-right py-2 text-primary/90 font-bold" data-tip="{item.label}">
-            <!-- icon -->
-            <i class="fas fa-{item.icon} w-5"></i>
-            <span class="is-drawer-close:hidden">{item.label}</span>
-        </a>
-        </li>
+          <li class="py-1">
+            <a
+              use:link
+              href={item.disabled ? "#" : item.href}
+              class="is-drawer-close:tooltip is-drawer-close:tooltip-right
+                    is-drawer-close:tooltip-primary
+                    text-primary/80"
+              data-tip={item.label}
+            >
+              <span class="w-6">
+                <i class="fas fa-regular fa-{item.icon}"></i>
+              </span>            
+              
+              <span class="is-drawer-close:hidden font-semibold">
+                {item.label}
+              </span>
+            </a>
+          </li>
         {/each}
+
       </ul>
     </div>
   </div>
 </div>
 
-  
 {/if}
 
 <InfoModal />

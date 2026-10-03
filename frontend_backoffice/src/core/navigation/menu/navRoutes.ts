@@ -8,7 +8,7 @@ export const navRoutes: NavRoutesMap =
 {
     "/home": {
       label: "Početak",
-      icon: "home",
+      icon: "house",
       href: "#/home",
       component: "/home",
       admin: true,
