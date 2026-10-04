@@ -29,6 +29,11 @@
     | "CANCELLED"
     | "NO_SHOW";
 
+  ///////////////////////////////////////////////////////
+  //TODO: staviti kad je nova rezervacija neki ring ili je nekako uokviriti
+  ///////////////////////////////////////////////////////
+
+
   // --------------------------------------------------
   // Configuration
   // --------------------------------------------------
@@ -367,11 +372,48 @@
   // Reservation filtering
   // --------------------------------------------------
 
+  // NEW: only reservations that overlap the visible period
+  function reservationIsVisible(reservation: Reservation): boolean {
+    return (
+      parseDate(reservation.checkOut) >= getCalendarStart() &&
+      parseDate(reservation.checkIn) < getCalendarEnd()
+    );
+  }
+
+  // CHANGED: filters out reservations outside the visible period
   function getRoomReservations(
     roomId: number,
     list: Reservation[]
   ): Reservation[] {
-    return list.filter((reservation) => reservation.roomId === roomId);
+    return list.filter(
+      (reservation) =>
+        reservation.roomId === roomId && reservationIsVisible(reservation)
+    );
+  }
+
+  // NEW: reservations of a room that start after the calendar end
+  function getReservationsAfterCalendar(
+    roomId: number,
+    list: Reservation[]
+  ): Reservation[] {
+    return list
+      .filter(
+        (reservation) =>
+          reservation.roomId === roomId &&
+          reservation.status !== "CANCELLED" &&
+          parseDate(reservation.checkIn) >= getCalendarEnd()
+      )
+      .sort(
+        (a, b) =>
+          parseDate(a.checkIn).getTime() - parseDate(b.checkIn).getTime()
+      );
+  }
+
+  // NEW: move the calendar so the given date is the first visible day
+  function jumpToDate(value: string) {
+    startDate = parseDate(value);
+
+    generateDates();
   }
 
   function hasReservationConflict(
@@ -662,6 +704,8 @@
 
           <!-- ROOMS -->
           {#each rooms as room, roomIndex}
+            <!-- NEW: upcoming reservations after the calendar end -->
+            {@const upcoming = getReservationsAfterCalendar(room.id, reservations)}
             <div class="relative flex" style={`height: ${ROW_HEIGHT}px;`}>
               <!-- Room -->
               <!-- TOUCH: added role, tabindex, cursor-pointer, onclick, onkeydown -->
@@ -804,6 +848,19 @@
                     ></div>
                   {/if}
                 {/each}
+
+                <!-- NEW: Upcoming reservations after calendar end -->
+                {#if upcoming.length > 0}
+                  <button
+                    type="button"
+                    class="absolute right-1 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1 rounded-md border border-base-300 bg-base-100 px-2 py-1 text-xs font-bold text-accent shadow-sm transition hover:bg-accent hover:text-accent-content"
+                    title={`Sledeća rezervacija: ${formatDate(parseDate(upcoming[0].checkIn))}`}
+                    onclick={() => jumpToDate(upcoming[0].checkIn)}
+                  >
+                    {upcoming.length}
+                    <span>{CONTINUES_AFTER_SYMBOL}</span>
+                  </button>
+                {/if}
 
                 <!-- Reservations -->
                 {#each getRoomReservations(room.id, reservations) as reservation (reservation.id)}
