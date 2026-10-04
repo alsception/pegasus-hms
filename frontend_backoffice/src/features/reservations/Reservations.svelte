@@ -385,7 +385,7 @@
   {:else}
 
     <!-- DESKTOP TABLE VIEW -->
-<div class="hidden md:block w-full max-w-[2048px] overflow-x-auto rounded-lg align-middle text-center mx-auto mt-8">
+<div class="hidden md:block w-full max-w-[2048px] overflow-x-auto rounded-lg align-middle text-center mx-auto mt-8 border border-primary/5">
 
   <table class="table table-zebra min-w-full divide-y divide-accent">
 

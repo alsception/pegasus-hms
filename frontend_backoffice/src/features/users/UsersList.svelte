@@ -251,7 +251,7 @@
   <ErrorDiv {error} />
 {:else}
   <div class="w-full flex justify-center">
-    <div class="w-full max-w-[1568px] p-4 bg-base-200 rounded-lg">
+    <div class="w-full max-w-[1568px] p-4 bg-base-200 rounded-lg border border-primary/10">
       <form
         on:submit|preventDefault={handleFormSubmit}
         class="flex flex-col lg:flex-row items-center gap-3"
@@ -260,7 +260,7 @@
           type="text"
           bind:value={searchTerm}
           placeholder="Traži korisnika..."
-          class="input border-2 max-w-md lg:flex-1"
+          class="input input-secondary border-2 max-w-md lg:flex-1"
         />
 
         <div class="flex flex-row gap-3 w-full lg:w-auto">
@@ -293,12 +293,12 @@
     <LoadingOverlay />
   {/if}
 
-  <div class="max-w-[1568px] overflow-x-auto rounded-lg align-middle mx-auto">
-    <table class="table table-zebra min-w-full divide-y divide-accent">
+  <div class="max-w-[1568px] overflow-x-auto rounded-xl align-middle mx-auto border border-primary/5">
+    <table class="table table-zebra min-w-full">
       <thead
-        class="/*bg-base-200*/ bg-base-300/80 /*border-2 border-primary/10*/"
+        class="bg-base-300/80"
       >
-        <tr class="h-12">
+        <tr class="h-12 ">
           <th class="pgs-th"> </th>
           <th
             class="pgs-th cursor-pointer"

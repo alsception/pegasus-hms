@@ -137,7 +137,7 @@
   </div>
 
   <!-- Sidebar -->
-  <div class="drawer-side is-drawer-close:overflow-visible z-150">
+  <div class="drawer-side is-drawer-close:overflow-visible z-150 border-r border-primary/5">
 
     <label
       for="my-drawer"
@@ -159,7 +159,7 @@
           aria-label="toggle sidebar"
           class="btn btn-square btn-ghost drawer-button"
         >
-          <i class="fas fa-bars text-xl"></i>
+          <i class="fas fa-bars text-xl light-icon"></i>
         </label>
 
         {#each navItems as item}
@@ -173,7 +173,7 @@
               data-tip={item.label}
             >
               <span class="w-6">
-                <i class="fas fa-regular fa-{item.icon}"></i>
+                <i class="fas fa-regular fa-{item.icon} light-icon"></i>
               </span>            
               
               <span class="is-drawer-close:hidden font-semibold">
@@ -192,3 +192,9 @@
 
 <InfoModal />
 <SvelteToast />
+
+<style>
+  .light-icon{
+    opacity: 0.8;
+  }
+</style>

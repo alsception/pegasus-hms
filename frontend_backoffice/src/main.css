@@ -425,3 +425,7 @@ body {
   background: linear-gradient(135deg, #a8edca, #00b894);
     background: linear-gradient(135deg, #39ff14, #008000);
 }
+
+.glassdrop{
+  backdrop-filter: blur(10px);
+}

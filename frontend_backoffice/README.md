@@ -12,3 +12,4 @@ TODO:
 ----
 6. Search reservations by EXACT date range
 7. Calendar: napraviti da rezervacija jedna zavrsava a druga pocinje u istom danu
+8. TODO-functionality: dodati dodatne usluge: masaza,wellness, dorucak...

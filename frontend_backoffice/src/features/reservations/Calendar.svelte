@@ -874,8 +874,8 @@
   {#if selectedReservation}
     {@const room = getRoomById(selectedReservation.roomId)}
 
-    <div class="modal modal-open" role="dialog" aria-modal="true">
-      <div class="modal-box max-w-2xl bg-base-200 p-0">
+    <div class="modal modal-open glassdrop" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-2xl bg-base-200 p-0 rounded-2xl">
         <!-- Header -->
         <div
           class="flex items-center justify-between border-b border-base-300 bg-base-300 px-6 py-4"
@@ -1064,8 +1064,8 @@
       !invalidDates &&
       hasNewReservationConflict(newRoomId, newCheckIn, newCheckOut)}
 
-    <div class="modal modal-open" role="dialog" aria-modal="true">
-      <div class="modal-box max-w-2xl bg-base-200 p-0">
+    <div class="modal modal-open glassdrop" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-2xl bg-base-200 p-0 rounded-lg">
         <!-- Header -->
         <div
           class="flex items-center justify-between border-b border-base-300 bg-info/30 px-6 py-4"

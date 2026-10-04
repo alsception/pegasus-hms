@@ -198,7 +198,4 @@
   .bg-black {
     background-color: #00000070;
   }
-  .glassdrop{
-    backdrop-filter: blur(10px);
-  }
 </style>
