@@ -29,11 +29,6 @@
     | "CANCELLED"
     | "NO_SHOW";
 
-  ///////////////////////////////////////////////////////
-  //TODO: staviti kad je nova rezervacija neki ring ili je nekako uokviriti
-  ///////////////////////////////////////////////////////
-
-
   // --------------------------------------------------
   // Configuration
   // --------------------------------------------------
@@ -64,12 +59,19 @@
 
   const DAY_MS = 1000 * 60 * 60 * 24;
 
+  // HIGHLIGHT: how long a newly created reservation stays highlighted (ms)
+  const NEW_RESERVATION_HIGHLIGHT_MS = 8000;
+
   // --------------------------------------------------
   // Data
   // --------------------------------------------------
 
   let rooms: Room[] = [];
   let reservations: Reservation[] = [];
+
+  // HIGHLIGHT: ids of reservations that were just created
+  let highlightedReservationIds: number[] = [];
+  let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // --------------------------------------------------
   // Calendar
@@ -500,6 +502,23 @@
   let newGuestSurname = "";
   let newNote = "";
 
+
+/**
+  TODO: HIGHLIGHT NETREBA DA SE UGASI TAKO BRZO
+ */
+
+  // HIGHLIGHT: mark reservations as "new" for a limited time
+  function highlightReservations(ids: number[]) {
+    if (highlightTimeout) clearTimeout(highlightTimeout);
+
+    highlightedReservationIds = ids;
+
+    highlightTimeout = setTimeout(() => {
+      highlightedReservationIds = [];
+      highlightTimeout = null;
+    }, NEW_RESERVATION_HIGHLIGHT_MS);
+  }
+
   function handleEmptyCellClick(room: Room, date: Date) {
     newRoomId = room.id;
     newCheckIn = dateKey(date);
@@ -557,6 +576,9 @@
     saving = true;
 
     try {
+      // HIGHLIGHT: remember which ids existed before saving
+      const previousIds = new Set(reservations.map((r) => r.id));
+
       await api<Reservation>("/reservations", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -567,6 +589,11 @@
       showNewModal = false;
 
       await fetchReservations();
+
+      // HIGHLIGHT: everything that wasn't there before is new
+      highlightReservations(
+        reservations.filter((r) => !previousIds.has(r.id)).map((r) => r.id)
+      );
     } catch (err) {
       alert((err as Error).message);
     } finally {
@@ -854,7 +881,7 @@
                   <button
                     type="button"
                     class="absolute right-1 top-1/2 z-20 flex -translate-y-1/2 items-center gap-1 rounded-md border border-base-300 bg-base-100 px-2 py-1 text-xs font-bold text-accent shadow-sm transition hover:bg-accent hover:text-accent-content"
-                    title={`Sledeća rezervacija: ${formatDate(parseDate(upcoming[0].checkIn))}`}
+                    title={`Sljedeća rezervacija: ${formatDate(parseDate(upcoming[0].checkIn))}`}
                     onclick={() => jumpToDate(upcoming[0].checkIn)}
                   >
                     {upcoming.length}
@@ -864,6 +891,8 @@
 
                 <!-- Reservations -->
                 {#each getRoomReservations(room.id, reservations) as reservation (reservation.id)}
+                  <!-- HIGHLIGHT: is this reservation newly created? -->
+                  {@const isHighlighted = highlightedReservationIds.includes(reservation.id)}
                   <div
                     class="absolute top-1 z-30 h-[56px] hover:z-50"
                     style={getReservationStyle(reservation)}
@@ -873,8 +902,12 @@
                       tabindex="0"
                       class={`group relative flex h-full w-full cursor-pointer flex-col justify-center overflow-visible rounded-md px-3 text-left shadow-sm transition hover:brightness-95 hover:ring-3 hover:ring-info ${
                         hasReservationConflict(reservation, reservations)
-                          ? "bg-error text-error-content ring-2 ring-error ring-offset-1"
+                          ? `bg-error text-error-content ${isHighlighted ? "" : "ring-2 ring-error ring-offset-1"}`
                           : getStatusClass(reservation.status)
+                      } ${
+                        isHighlighted
+                          ? "animate-pulse ring-4 ring-primary ring-offset-2 ring-offset-base-100"
+                          : ""
                       }`}
                       onclick={() => handleReservationClick(reservation)}
                       onkeydown={(e) => {
@@ -885,6 +918,15 @@
                         }
                       }}
                     >
+                      <!-- HIGHLIGHT: "NOVO" badge -->
+                      {#if isHighlighted}
+                        <span
+                          class="badge badge-primary badge-xs absolute -top-2 left-2 z-10 font-bold"
+                        >
+                          NOVO
+                        </span>
+                      {/if}
+
                       <!-- Reservation tooltip -->
                       <div
                         class={`pointer-events-none absolute left-1/2 z-50 w-64 -translate-x-1/2 cursor-default whitespace-normal rounded-lg border border-base-300 bg-base-100 p-4 text-left text-base-content opacity-0 shadow-xl transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 ${
