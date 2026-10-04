@@ -52,7 +52,7 @@
   // Attention: these are 2 different tooltips!
 
   // Number of first room rows whose tooltip opens downward
-  const TOOLTIP_BELOW_ROWS = 2;
+  const TOOLTIP_BELOW_ROWS = 5;
 
   // Extra space reserved for room tooltips
   const ROOM_TOOLTIP_OFFSET = 42    ;
@@ -277,6 +277,23 @@
     }
   }
 
+  function getReservationStatusColor(status: ReservationStatus): string {
+    switch (status) {
+      case "CONFIRMED":
+        return "text-accent";
+      case "CHECKED_IN":
+        return "text-success";
+      case "CHECKED_OUT":
+        return "text-base-content/60";
+      case "PENDING":
+        return "text-warning";
+      case "CANCELLED":
+        return "text-error";
+      default:
+        return "text-base-content";
+    }
+  }
+
   function getStatusLabel(status: ReservationStatus): string {
     switch (status) {
       case "CONFIRMED":
@@ -292,11 +309,58 @@
         return "Na čekanju";
 
       case "CANCELLED":
-        return "Otkazana";
+        return "Otkazano";
 
       default:
         return status;
     }
+  }
+
+  // --------------------------------------------------
+  // Room status
+  // --------------------------------------------------
+
+  function getRoomStatusLabel(status: string): string {
+    switch (String(status).toUpperCase()) {
+      case "AVAILABLE":
+        return "SLOBODNA";
+      case "OCCUPIED":
+        return "ZAUZETA";
+      case "CLEANING":
+        return "ČIŠĆENJE";
+      case "MAINTENANCE":
+        return "ODRŽAVANJE";
+      case "OUT_OF_SERVICE":
+        return "VAN FUNKCIJE";
+      default:
+        return String(status ?? "").toUpperCase();
+    }
+  }
+
+  function getRoomStatusColor(status: string): string {
+    switch (String(status).toUpperCase()) {
+      case "AVAILABLE":
+        return "text-success";
+      case "OCCUPIED":
+        return "text-error";
+      case "CLEANING":
+        return "text-info";
+      case "MAINTENANCE":
+      case "OUT_OF_SERVICE":
+        return "text-warning";
+      default:
+        return "text-base-content";
+    }
+  }
+
+  // --------------------------------------------------
+  // Room tooltip (hover + click)
+  // --------------------------------------------------
+
+  let openRoomTooltipId: number | null = null;
+
+  function toggleRoomTooltip(roomId: number) {
+    openRoomTooltipId = openRoomTooltipId === roomId ? null : roomId;
   }
 
   // --------------------------------------------------
@@ -521,7 +585,7 @@
 
     <div class="flex items-center gap-8">
       <button
-        class="btn btn-md btn-ghost"
+        class="btn btn-md btn-ghost hover:text-accent"
         onclick={() => (showNewModal = true)}
       >
         <i class="fas fa-plus"></i>
@@ -580,7 +644,7 @@
                     : "bg-base-200"
                 } ${
                   isToday(date)
-                    ? "bg-primary text-primary-content"
+                    ? "bg-primary/10 text-accent "
                     : "bg-base-200"
                 }`}
                 style={`width: ${DAY_WIDTH}px;`}
@@ -600,12 +664,25 @@
           {#each rooms as room, roomIndex}
             <div class="relative flex" style={`height: ${ROW_HEIGHT}px;`}>
               <!-- Room -->
+              <!-- TOUCH: added role, tabindex, cursor-pointer, onclick, onkeydown -->
               <div
-                class="group relative sticky left-0 z-41 flex shrink-0 flex-col justify-center border-b border-r border-base-300 bg-base-100 px-3 hover:bg-info/10"
+                role="button"
+                tabindex="0"
+                class="group relative sticky left-0 z-41 flex shrink-0 cursor-pointer flex-col justify-center border-b border-r border-base-300 bg-base-100 px-3 hover:bg-info/10"
                 style={`width: ${ROOM_WIDTH}px;`}
+                onclick={(e) => {
+                  e.stopPropagation();
+                  toggleRoomTooltip(room.id);
+                }}
+                onkeydown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleRoomTooltip(room.id);
+                  }
+                }}
               >
                 <!-- Room number -->
-                <span class="text-lg font-bold leading-tight">
+                <span class="text-lg font-bold leading-tight group-hover:text-accent">
                   {room.roomNumber}
                 </span>
 
@@ -625,8 +702,13 @@
                 </div>
 
                 <!-- Room tooltip -->
+                <!-- TOUCH: class now depends on openRoomTooltipId -->
                 <div
-                  class={`pointer-events-none absolute left-full z-50 ml-2 w-64 rounded-lg border border-base-300 bg-base-100 p-4 shadow-xl opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
+                  class={`pointer-events-none absolute left-full z-50 ml-2 w-64 rounded-lg border border-base-300 bg-base-100 p-4 shadow-xl transition-opacity duration-150 ${
+                    openRoomTooltipId === room.id
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100"
+                  } ${
                     roomIndex < TOOLTIP_BELOW_ROWS
                       ? "top-full -translate-y-1/2"
                       : "bottom-full translate-y-1/2"
@@ -681,8 +763,8 @@
                     <div class="flex items-center justify-between gap-4">
                       <span class="text-base-content/60"> Status </span>
 
-                      <span class="font-semibold">
-                        {room.status}
+                      <span class={`font-bold tracking-wide ${getRoomStatusColor(room.status)}`}>
+                        {getRoomStatusLabel(room.status)}
                       </span>
                     </div>
                   </div>
@@ -748,56 +830,91 @@
                     >
                       <!-- Reservation tooltip -->
                       <div
-                        class={`pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-lg border border-base-100 bg-base-300 p-3 text-left text-base-content opacity-0 shadow-2xl transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 ${
+                        class={`pointer-events-none absolute left-1/2 z-50 w-64 -translate-x-1/2 cursor-default whitespace-normal rounded-lg border border-base-300 bg-base-100 p-4 text-left text-base-content opacity-0 shadow-xl transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 ${
                           roomIndex < TOOLTIP_BELOW_ROWS
                             ? "top-full mt-2"
                             : "bottom-full mb-2"
                         }`}
                       >
-                        <div class="flex flex-col gap-1 text-sm">
-                          <div class="font-bold text-primary">
+                        <div
+                          class="mb-3 flex items-center gap-2 border-b border-base-300 pb-2"
+                        >
+                          <i class="fas fa-calendar-check text-base-content/60"></i>
+
+                          <span class="font-bold">
                             Soba {room.roomNumber}
+                          </span>
+                        </div>
+
+                        <div class="space-y-2 text-sm">
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Rezervacija </span>
+                            <span class="font-medium">
+                              {reservation.id}
+                            </span>
                           </div>
 
-                          <div>
-                            <span class="opacity-60"> Gost: </span>
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Gost </span>
 
-                            <span class="font-semibold">
+                            <span class="font-medium">
+                              <i class="fas fa-user mr-1 text-xs text-base-content/50"></i>
                               {reservation.bookerId}
                             </span>
                           </div>
 
-                          <div>
-                            <span class="opacity-60"> Check-in: </span>
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Check-in </span>
 
-                            <span class="font-semibold">
+                            <span class="font-medium">
                               {formatDate(parseDate(reservation.checkIn))}
                             </span>
                           </div>
 
-                          <div>
-                            <span class="opacity-60"> Check-out: </span>
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Check-out </span>
 
-                            <span class="font-semibold">
+                            <span class="font-medium">
                               {formatDate(parseDate(reservation.checkOut))}
                             </span>
                           </div>
 
-                          <div>
-                            <span class="opacity-60"> Status: </span>
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Noći </span>
+
+                            <span class="font-medium">
+                              {getNights(reservation.checkIn, reservation.checkOut)}
+                            </span>
+                          </div>
+
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Ukupno </span>
 
                             <span class="font-semibold">
+                              € {Number(reservation.totalPrice ?? 0).toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div class="flex items-center justify-between gap-4">
+                            <span class="text-base-content/60"> Status </span>
+
+                            <span
+                              class={`font-bold uppercase tracking-wide ${getReservationStatusColor(reservation.status)}`}
+                            >
                               {getStatusLabel(reservation.status)}
                             </span>
                           </div>
 
-                          <div>
-                            <span class="opacity-60"> Napomena: </span>
+                          {#if reservation.notes}
+                            <div class="border-t border-base-300 pt-2">
+                              <i class="fas fa-circle-info text-info/40"></i>
+                              <span class="text-base-content/60">Napomena</span>
 
-                            <span class="font-semibold">
-                              {reservation.notes}
-                            </span>
-                          </div>
+                              <p class="mt-1 font- font-bold">
+                                {reservation.notes}
+                              </p>
+                            </div>
+                          {/if}
                         </div>
                       </div>
 
@@ -888,7 +1005,7 @@
 
           <button
             type="button"
-            class="btn btn-sm btn-circle btn-ghost"
+            class="btn btn-sm btn-ghost btn-circle text-base-content/60 hover:text-primary"
             aria-label="Zatvori"
             onclick={closeModal}
           >
@@ -1077,7 +1194,7 @@
 
           <button
             type="button"
-            class="btn btn-sm btn-circle btn-ghost"
+            class="btn btn-sm btn-ghost btn-circle text-base-content/60 hover:text-primary"
             aria-label="Zatvori"
             onclick={closeModal}
           >
@@ -1250,9 +1367,12 @@
   {/if}
 </div>
 
+<!-- TOUCH: window click closes the room tooltip, Escape closes it too -->
 <svelte:window
+  onclick={() => (openRoomTooltipId = null)}
   onkeydown={(e) => {
     if (e.key === "Escape") {
+      openRoomTooltipId = null;
       closeModal();
     }
   }}

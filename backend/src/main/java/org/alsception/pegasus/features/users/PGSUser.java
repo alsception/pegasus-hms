@@ -45,7 +45,7 @@ public class PGSUser
     @Column(nullable = false)
     private String password;
     
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private PGSUserRole role;
     

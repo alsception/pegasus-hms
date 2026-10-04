@@ -253,37 +253,38 @@
   <div class="w-full flex justify-center">
     <div class="w-full max-w-[1568px] p-4 bg-base-200 rounded-lg border border-primary/10">
       <form
-        on:submit|preventDefault={handleFormSubmit}
-        class="flex flex-col lg:flex-row items-center gap-3"
-      >
-        <input
-          type="text"
-          bind:value={searchTerm}
-          placeholder="Traži korisnika..."
-          class="input input-secondary border-2 max-w-md lg:flex-1"
-        />
+  on:submit|preventDefault={handleFormSubmit}
+  class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full"
+>
+  <input
+    type="text"
+    bind:value={searchTerm}
+    placeholder="Traži korisnika..."
+    class="input input-secondary border-2 w-full lg:max-w-md lg:flex-1"
+  />
 
-        <div class="flex flex-row gap-3 w-full lg:w-auto">
-          <button
-            type="submit"
-            class="btn btn-dash flex-1 lg:flex-none whitespace-nowrap"
-          >
-            <i class="fas fa-search"></i>
-            Traži
-          </button>
-          {#if getCurrentRole() === "ADMIN"}
-            <button
-              type="button"
-              on:click={openCreateModal}
-              class="btn btn-dash flex-1 lg:flex-none whitespace-nowrap"
-            >
-              <i class="fas fa-plus"></i>
-              <i class="fas fa-user"></i>
-              Novi korisnik
-            </button>
-          {/if}
-        </div>
-      </form>
+  <div class="flex flex-row gap-3 w-full lg:w-auto">
+    <button
+      type="submit"
+      class="btn btn-dash flex-1 lg:flex-none whitespace-nowrap"
+    >
+      <i class="fas fa-search"></i>
+      Traži
+    </button>
+
+    {#if getCurrentRole() === "ADMIN"}
+      <button
+        type="button"
+        on:click={openCreateModal}
+        class="btn btn-dash flex-1 lg:flex-none whitespace-nowrap"
+      >
+        <i class="fas fa-plus"></i>
+        <i class="fas fa-user"></i>
+        Novi korisnik
+      </button>
+    {/if}
+  </div>
+</form>
     </div>
   </div>
 

@@ -6,7 +6,7 @@
     </p>
     <div class="modal-action">
       <form method="dialog">         
-        <button class="btn btn-secondary mt-4">Zatvori</button>
+        <button class="btn btn-ghost mt-4">Zatvori</button>
       </form>
     </div>
   </div>
