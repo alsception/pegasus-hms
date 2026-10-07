@@ -1,7 +1,10 @@
 package org.alsception.pegasus.features.notifications;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -10,13 +13,13 @@ import java.util.List;
 import org.alsception.pegasus.features.order.PGSOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
     
     private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
@@ -58,20 +61,30 @@ public class NotificationService {
     }
     
     // Create notification with builder pattern
-    @Async //fire and forget
-    @Transactional
-    public void createNotification(String title, String text, String from, String to, String type) 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)  //Ovo je bitno
+    public void createNotification(String title, String message, String from, String to, String type, String refType, Long refId) 
     {
+        System.out.println("asfasdasdsadasd");
         logger.debug("Creating notification");
         PGSNotification notification = new PGSNotification();
         notification.setTitle(title);
-        notification.setText(text);
+        notification.setMessage(message);
         notification.setFrom(from);
         notification.setTo(to);
         notification.setType(type);
-        notification.setRead(false);
-        notificationRepository.save(notification);
-        logger.debug("Notification saved");
+        notification.setReferenceType(refType);
+        notification.setReferenceId(refId);
+        System.out.println("savin notifications...");
+        System.out.println(notification.toString());
+        notification = notificationRepository.save(notification);
+        System.out.println("Notification saved "+notification.getId());
+
+
+        messagingTemplate.convertAndSendToUser(
+                to,                        // username primatelja
+                "/queue/notifications",    // destinacija
+                notification               // bolje DTO nego entitet
+        );
     }
     
     // Mark notification as read

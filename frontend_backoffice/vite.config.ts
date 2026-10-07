@@ -21,6 +21,10 @@ export default defineConfig({
     }
   },
 
+  define: {
+    global: 'globalThis', //treba za socket
+  },
+
   /* za sad nece da koristimo ovo jer imamo svoju mount_frontend.sh scriptu
   build: {
     outDir: '../backend/src/main/resources/static',

@@ -84,6 +84,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/api/sync/**").permitAll()    //Za cloud sync 
                 .requestMatchers("/api/payments/webhook").permitAll()   //stripe webhook
+                .requestMatchers("/api/ws/**").permitAll()      //websocketi za notifikacije
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

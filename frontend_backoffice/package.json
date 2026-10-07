@@ -15,6 +15,7 @@
     "@tsconfig/svelte": "^5.0.4",
     "@types/leaflet": "^1.9.21",
     "@types/leaflet-routing-machine": "^3.2.9",
+    "@types/sockjs-client": "^1.5.4",
     "@zerodevx/svelte-toast": "^0.9.6",
     "autoprefixer": "^10.4.21",
     "daisyui": "^5.5.19",
@@ -26,12 +27,14 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
     "@stripe/stripe-js": "^9.0.1",
     "@tailwindcss/vite": "^4.1.6",
     "axios": "^1.9.0",
     "gsap": "^3.13.0",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
+    "sockjs-client": "^1.6.1",
     "svelte-spa-router": "^4.0.1",
     "tailwindcss": "^4.1.6"
   }

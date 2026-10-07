@@ -440,13 +440,13 @@ public class CartService
 
         logger.info("**New order {}, {}, id[{}] ", order.getCode(), username, id);
        
-        //10. finally notification
-        notificationService.createNotification(
+        //10. finally notification EDIT: now we dont do like this anymore but use events
+        /*notificationService.createNotification(
             "Nova narudžba", 
             notificationService.createNewOrderText(order), order.getUser().getUsername(), 
             "*",//order.getUser().getUsername()+",kitchen,admin", 
             "1"
-            );
+            );*/
 
         return id;
     }

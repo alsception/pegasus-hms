@@ -1,5 +1,7 @@
 package org.alsception.pegasus.features.notifications;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -41,4 +43,6 @@ public interface NotificationRepository extends JpaRepository<PGSNotification, L
     
     // Delete old read notifications (optional cleanup method)
     void deleteByToAndReadTrue(String to);
+
+    Page<PGSNotification> findByToOrderByCreatedDesc(String to, Pageable pageable);
 }

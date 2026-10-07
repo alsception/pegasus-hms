@@ -24,7 +24,7 @@ public class PGSNotification
     private String title;
     
     @Column(columnDefinition = "TEXT")
-    private String text;
+    private String message;
     
     @Column(name = "from_user")
     private String from;
@@ -38,14 +38,19 @@ public class PGSNotification
     /* @Enumerated(EnumType.STRING) */
     @Column(length = 20)
     private String type;
+
+    @Column(name = "reference_id")
+    private Long referenceId;
+
+    @Column(name = "reference_type", length = 30)
+    private String referenceType;
     
     @CreationTimestamp
     @Column(name = "created", nullable = true, updatable = false)
     private LocalDateTime created;
 
     @Column(nullable = true)
-    private LocalDateTime modified;
-    
+    private LocalDateTime modified;    
 
     @PrePersist
     protected void onCreate() {

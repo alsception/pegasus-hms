@@ -197,8 +197,8 @@ public class OrderService
 
         PGSOrder updated = orderRepository.save(existing);
         
-        notificationService.createNotification(
-                "Narudžba "+updated.getCode()+" je: "+updated.getStatus(),"", "system", "*", "status_update");
+        /*notificationService.createNotification(
+                "Narudžba "+updated.getCode()+" je: "+updated.getStatus(),"", "system", "*", "status_update");*/
         
         return updated;
     }    
@@ -250,8 +250,8 @@ public class OrderService
             msg = notificationService.createOrderStatusText(order);
         }
 
-        notificationService.createNotification(
+        /*notificationService.createNotification(
             "", msg, order.getUser().getUsername()+",kitchen,admin", "*", type
-        );
+        );*/
     }
 }

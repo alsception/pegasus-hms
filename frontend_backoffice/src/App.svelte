@@ -13,6 +13,7 @@
   import InfoModal from "./core/utils/ErrorModal.svelte";
   import { navRoutes } from "./core/navigation/menu/navRoutes";
   import type { NavRoutesMap } from "./core/navigation/menu/MenuTypes";
+  import { connectNotifications } from "./core/services/Notifications";
 
   document.title = 'Pegasus'
 
@@ -74,6 +75,12 @@
     {
       const { isAuthenticated: authStatus } = get(auth);
       isAuthenticated = authStatus;
+
+      if(isAuthenticated)
+      {
+        connectNotifications();
+      }
+
       const params = new URLSearchParams(window.location.search);
       let page = params.get('page');
       if (page === 'completion') 

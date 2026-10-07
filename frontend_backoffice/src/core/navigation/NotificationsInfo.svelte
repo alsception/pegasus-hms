@@ -26,12 +26,12 @@
     onMount(() => 
     {        
         // 1. Prvo učitavanje odmah
-        fetchNotifications(true);
+        //fetchNotifications(true);
 
         // 2. Fetchuj na svakih 5 sekundi
-        interval = setInterval(() => {
+        /*interval = setInterval(() => {
             fetchNotifications(false);
-        }, REFRESH_INTERVAL);
+        }, REFRESH_INTERVAL);*/
     });
 
     onDestroy(() => 

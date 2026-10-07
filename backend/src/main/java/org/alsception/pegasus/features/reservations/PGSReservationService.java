@@ -1,12 +1,15 @@
 package org.alsception.pegasus.features.reservations;
 
 import lombok.RequiredArgsConstructor;
+
+import org.alsception.pegasus.features.events.ReservationCreatedEvent;
 import org.alsception.pegasus.features.rooms.PGSRoom;
 import org.alsception.pegasus.features.rooms.PGSRoomRepository;
 import org.alsception.pegasus.features.users.PGSUser;
 import org.alsception.pegasus.features.users.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +27,9 @@ public class PGSReservationService {
     private final PGSReservationRepository reservationRepository;
     private final PGSRoomRepository roomRepository;
     private final UserRepository userRepository;
-    private static final Logger logger = LoggerFactory.getLogger(PGSReservationService.class);
+    private final ApplicationEventPublisher publisher;
 
+    private static final Logger logger = LoggerFactory.getLogger(PGSReservationService.class);
 
     @Transactional(readOnly = true)
     public List<PGSReservationDTO> getAllReservations() {
@@ -57,7 +61,8 @@ public class PGSReservationService {
     }
 
     @Transactional
-    public PGSReservationDTO createReservation(PGSReservationDTO dto) {
+    public PGSReservationDTO createReservation(PGSReservationDTO dto) 
+    {
 
         PGSRoom room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() ->
@@ -99,7 +104,13 @@ public class PGSReservationService {
             reservation.setBooker(user);
         }
 
-        return toDTO(reservationRepository.save(reservation));
+        reservation = reservationRepository.save(reservation);
+
+        //Here we publish event that will be captured by ReservationNotificationListener
+        logger.info("Publishing new event: ref["+reservation.getId()+"]");
+        publisher.publishEvent(new ReservationCreatedEvent(reservation.getId(),"pgsadmin"));
+
+        return toDTO(reservation);
     }
 
     @Transactional
