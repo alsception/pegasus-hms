@@ -22,87 +22,14 @@
   };
 
   const allItems: Item[] = [
-    /* {
-      id: 1,
-      emoji: "📔",
-      title: "Jelovnik",
-      description: "Pregledaj proizvode",
-      icon: "box--",
-      href: "/products",
-      color: "green",
-      default: true,
-      admin: true,
-      customer: true,
-    }, */
     {
       id: 0,
       emoji: "👤",
       title: "Korisnici",
       description: "Upravljanje korisnicima",
-      icon: "users--",
+      icon: "users",
       href: "/users",
       color: "blue",
-      default: false,
-      admin: true,
-      customer: false,
-    },
-    {
-      id: 6,
-      emoji: "🪑",
-      title: "Stolovi",
-      description: "Pregled i upravljanje stolovima",
-      icon: "--table",
-      href: "/tables",
-      color: "yellow",
-      default: false,
-      admin: false,
-      customer: false,
-    },
-    {
-      id: 4,
-      emoji: "📔",
-      title: "Rezervacije",
-      description: "Pregled i upravljanje rezervacijama",
-      icon: "truck--",
-      href: "/reservations",
-      color: "red",
-      default: false,
-      admin: true,
-      customer: true,
-    },
-    {
-      id: 3,
-      emoji: "🧺",
-      title: "Košarica",
-      description: "Pregledaj proizvode u košarici",
-      icon: "", //"shopping-basket",
-      href: "/cart",
-      color: "orange",
-      default: false,
-      admin: false,
-      customer: false,
-    },
-    {
-      id: 2,
-      emoji: "📦",
-      title: "Artikli",
-      description: "Upravljanje artiklima",
-      icon: "box--",
-      href: "/artikli",
-      color: "yellow",
-      default: false,
-      admin: false,
-      customer: false,
-    },    
-    
-    {
-      id: 5,
-      emoji: "📅",
-      title: "Kalendar",
-      description: "Upravljanje rezervacijama i boravcima",
-      icon: "truck--",
-      href: "/calendar",
-      color: "red",
       default: false,
       admin: true,
       customer: false,
@@ -112,7 +39,7 @@
       emoji: "🛋️",
       title: "Sobe",
       description: "Sobe",
-      icon: "users--",
+      icon: "bed",
       href: "/inventory",
       color: "blue",
       default: false,
@@ -120,11 +47,35 @@
       customer: false,
     },
     {
+      id: 4,
+      emoji: "📔",
+      title: "Rezervacije",
+      description: "Pregled i upravljanje rezervacijama",
+      icon: "file-lines",
+      href: "/reservations",
+      color: "red",
+      default: false,
+      admin: true,
+      customer: true,
+    },
+    {
+      id: 5,
+      emoji: "📅",
+      title: "Kalendar",
+      description: "Upravljanje rezervacijama i boravcima",
+      icon: "calendar-days",
+      href: "/calendar",
+      color: "red",
+      default: false,
+      admin: true,
+      customer: false,
+    },    
+    {
       id: 6,
       emoji: "📈",
       title: "Statistike",
       description: "",
-      icon: "",
+      icon: "chart-line",
       href: "/stats",
       color: "",
       default: false,
@@ -192,21 +143,21 @@
   >
     {#each displayedItems as item}
       <a
-        href="#{item.href}"
-        class="m-2 sm:m-1 shadow-sm hover:shadow-xl max-h-[170px]"
-      >
-        <div
-          class="menu-card card-8 flex-col bg-base-100 dark:bg-[linear-gradient(135deg,_#1d1d1d_0%,_#0d0d0d_100%)]"
-        >
-          <div
-            class="card-content hover:bg-info/20 dark:hover:bg-primary/10 flex flex-col items-center justify-center text-primary/70"
-          >
-            <span class="icon">{item.emoji}</span>
-            <h4 class="title">{item.title}</h4>
-          </div>
-          <span class="arrow">→</span>
-        </div>
-      </a>
+  href="#{item.href}"
+  class="group m-2 sm:m-1 shadow-sm hover:shadow-xl max-h-[170px]"
+>
+  <div
+    class="menu-card card-8 flex-col bg-base-100 dark:bg-[linear-gradient(135deg,_#1d1d1d_0%,_#0d0d0d_100%)]"
+  >
+    <div
+      class="card-content hover:bg-info/20 dark:hover:bg-primary/10 flex flex-col items-center justify-center text-primary/70 group-hover:text-accent"
+    >
+      <i class="icon fas fa-{item.icon}"></i>
+      <h4 class="title">{item.title}</h4>
+    </div>
+    <span class="arrow group-hover:text-accent">→</span>
+  </div>
+</a>
     {/each}
   </div>
 
@@ -341,4 +292,10 @@
       grid-template-columns: 1fr;
     }
   }
+
+  a:hover .icon,
+a:hover .title,
+a:hover .arrow {
+  color: var(--color-info) !important;
+}
 </style>

@@ -22,9 +22,10 @@
 
   {:else if isFetchError}
     
-    <p class="text-primary/80 text-2xl mt-8 text-center p-2">
+    <p class="text-red-500 dark:text-red-400 text-2xl mt-8 text-center p-2 bg-error-content ">
         {error}
     </p>
+    <p class="text-md p-16 text-primary/70">Server nije dostupan. Pokušajte ponovo za nekoliko trenutaka.</p>
 
   {:else if is404}
     
@@ -34,7 +35,7 @@
 
   {:else}
 
-    <p class="text-red-500 text-xl mt-8 text-center dark:text-red-400 bg-error-content p-2">
+    <p class="text-red-500 dark:text-red-400 bg-error-content p-2 text-xl mt-8 text-center">
         {error}
     </p>
 

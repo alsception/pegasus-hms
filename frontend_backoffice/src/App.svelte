@@ -2,7 +2,7 @@
   //Svelte imports
   import { get } from "svelte/store";
   import { onMount } from "svelte";
-  import Router, { link, push } from "svelte-spa-router";
+  import Router, { link, location, push } from "svelte-spa-router";
 
   //Our imports - core
   import { auth, getCurrentRole } from "./core/services/SessionStore";
@@ -68,6 +68,13 @@
   }
   let navItems = getNavigationItems();
 
+  $: isActive = (href: string) =>
+  {      
+    //Koja je ruta aktivna, njoj dodajemo css color da ga istaknemo
+    let isActive = '#' + $location === href;
+    return isActive;
+  }
+ 
   //END REFACTORING BLOCK//
 
   onMount(async () => 
@@ -132,9 +139,16 @@
       </label>
 
       <div class="px-4 font-bold text-primary">
-        PEGASUS HMS
+        <a
+          use:link
+          href=#/home
+          class="text-primary/80 hover:text-info"
+          data-tip="PEGASUS HMS"
+        >PEGASUS HMS</a>       
+        
       </div>
-<div class="dropdown ml-auto">
+
+      <div class="dropdown ml-auto">
       <button
         tabindex="0"
         class="btn btn-ghost p-0 hover:bg-primary/10 text-gray-500 text-xl"
@@ -151,39 +165,6 @@
 
       <NotificationsInfo />
     </div>
-<!-- 
-        <ul
-          class="menu menu-sm dropdown-content w-52 p-2 scale-in-ver-top
-                bg-base-100 dark:bg-zinc-900
-                rounded shadow
-                max-h-180 overflow-x-auto block"
-          style="min-width: 300px; left: -270px; top: 44px"
-        >
-          <li class="flex  px-3 py-2 rounded-md">
-            <div class="inline-flex gap-1">
-            No new notifications
-            </div>
-          </li>
-          <li class=""></li>
-                <li class="w-full border-t border-primary/10">
-                    <div class="flex items-center px-3 py-2 rounded-md cursor-pointer
-                                hover:bg-base-200 hover:text-blue-400
-                                text-primary text-sm"
-                    >
-                        <i class="fas fa-info w-5 mr-3"></i>
-
-                        <div class="flex flex-col">
-                        <p class="font-bold dark:text-gray-400">
-asd                        </p>
-                        <p class="text-xs dark:text-gray-500 ">
-fgh                        </p>
-                        <p class="text-xs dark:text-gray-600 ">fgh</p>
-                        </div>
-                    </div>
-                </li>
-        </ul>
-
- -->
     </nav>
 
     <!-- Main content goes here inside routes-->
@@ -220,20 +201,21 @@ fgh                        </p>
         </label>
 
         {#each navItems as item}
-          <li class="py-1">
+          <li class="py-1" class:active={isActive(item.href)}>
             <a
               use:link
               href={item.disabled ? "#" : item.href}
               class="is-drawer-close:tooltip is-drawer-close:tooltip-right
                     is-drawer-close:tooltip-primary
-                    text-primary/80"
+                    text-primary/70"
               data-tip={item.label}
+              style="border-radius: initial;"
             >
               <span class="w-6">
                 <i class="fas fa-regular fa-{item.icon} light-icon"></i>
               </span>            
               
-              <span class="is-drawer-close:hidden font-semibold">
+              <span class="is-drawer-close:hidden">
                 {item.label}
               </span>
             </a>
@@ -253,5 +235,15 @@ fgh                        </p>
 <style>
   .light-icon{
     opacity: 0.8;
+  }
+
+  .active{
+    background-color: color-mix(in oklab, var(--color-info) 10%, transparent);
+    border: 1pt solid color-mix(in oklab, var(--color-info) 10%, transparent);
+  }
+  .active > a
+  {
+    color: var(--color-info);
+    font-weight: bold;
   }
 </style>

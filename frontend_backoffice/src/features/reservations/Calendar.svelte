@@ -6,6 +6,7 @@
   import type { Reservation } from "./Reservation";
   import { showSuccessToast } from "../../core/utils/toaster";
   import { link } from "svelte-spa-router";
+  import { showErrorModalWithTitle } from "../../utils/modal";
 
   let error: string | null = null;
   let loading = true;
@@ -625,6 +626,33 @@
     }
   }
 
+  async function handleDelete(id: number | string) 
+  {
+    if (!confirm("Obrisati ovu rezervaciju?")) return;
+
+    loading = true;
+
+    try 
+    {
+      await api(`/reservations/`+id, { method: "DELETE" });
+
+      showSuccessToast("Rezervacija je obrisana");
+
+      closeModal();
+
+      fetchReservations();//dali nam stvarno treba ovaj fetch ovde?
+    } 
+    catch (err) 
+    {
+      //alert((err as Error).message);
+      showErrorModalWithTitle("Greška prilikom brisanja rezervacije", error);
+    } 
+    finally 
+    {
+      loading = false;
+    }
+  }
+
   // --------------------------------------------------
   // Initial setup
   // --------------------------------------------------
@@ -654,8 +682,9 @@
 
     <div class="flex items-center gap-8">
       <button
-        class="btn btn-md btn-ghost hover:text-accent"
+        class="btn btn-md btn-ghost hover:text-info"
         onclick={() => (showNewModal = true)}
+        disabled={error !== null}
       >
         <i class="fas fa-plus"></i>
         Nova rezervacija
@@ -673,11 +702,14 @@
     </div>
   </div>
 
-  {#if loading}
-    <LoadingOverlay />
-  {:else if error}
+  {#if error}    
     <ErrorDiv {error} />
   {:else}
+
+    {#if loading}
+      <LoadingOverlay />    
+    {/if}
+
     {#key startDate.getTime()}
       <!-- Board -->
       <div
@@ -713,7 +745,7 @@
                     : "bg-base-200"
                 } ${
                   isToday(date)
-                    ? "bg-primary/10 text-accent "
+                    ? "bg-primary/10 text-info "
                     : "bg-base-200"
                 }`}
                 style={`width: ${DAY_WIDTH}px;`}
@@ -753,7 +785,7 @@
                 }}
               >
                 <!-- Room number -->
-                <span class="text-lg font-bold leading-tight group-hover:text-accent">
+                <span class="text-lg font-bold leading-tight group-hover:text-info">
                   {room.roomNumber}
                 </span>
 
@@ -1115,6 +1147,19 @@
         <!-- Body -->
         <div class="p-8">
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <!-- Open reservation details page -->
+            <div class="flex items-end md:col-span-2">
+              <a
+                href={`#/reservations/${selectedReservation.id}`}
+                use:link
+                target="_blank"
+                rel="noopener noreferrer"
+                class="pgs-hyperlink text-primary/40"
+              >
+                <i class="fas fa-arrow-up-right-from-square mr-1"></i>
+                Otvori detalje rezervacije
+              </a>
+            </div>
             <!-- Room -->
             <label class="form-control">
               <span class="label">
@@ -1236,20 +1281,17 @@
               ></textarea>
             </label>
 
-            <!-- Open reservation -->
-            <div class="flex items-end md:col-span-2">
-              <a
-                href={`#/reservations/${selectedReservation.id}`}
-                use:link
-                target="_blank"
-                rel="noopener noreferrer"
-                class="pgs-hyperlink"
-              >
-                <i class="fas fa-arrow-up-right-from-square mr-1"></i>
-                Otvori detalje rezervacije
-              </a>
-            </div>
+            
           </div>
+
+          <button
+            type="button"
+            class="btn btn-outline hover:text-error"
+            onclick={() => handleDelete(selectedReservation.id)}
+          >
+            <i class="fas fa-trash text-primary/60"></i>
+            Obriši
+          </button>
 
           <div class="mt-6 flex justify-end">
             <button type="button" class="btn btn-ghost" onclick={closeModal}>

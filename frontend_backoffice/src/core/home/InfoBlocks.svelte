@@ -23,20 +23,20 @@
   const items: Item[] = 
   [
     {
-      title: "Narudžbe na čekanju",
-      description: "Narudžbe koje čekaju pripremu",
+      title: "Rezervacije na čekanju",
+      description: "",
       color: "gray",
       amount: 0,
     },
     {
-      title: "Narudžbe u pripremi",
+      title: "Rezervacije u obradi",
       color: "gray",
-      description: "Narudžbe koje se trenutno pripremaju",
+      description: "",
       amount: 0,
     },
     {
-      title: "Pripremljeno narudžbi",
-      description: "Narudžbe spremne za preuzimanje",
+      title: "Prisutno gostiju",
+      description: "",
       color: "gray",
       amount: 0,
     },
@@ -136,13 +136,13 @@
     <!-- style="--delay: {index * 0.1}s" -->
      <a use:link href="/stats" class="cursor-pointer">
     <div class="stat-card rounded-xl p-2 flex flex-col gap-1 h-fit
-         shadow border border-primary/20 hover:outline-primary/20 hover:outline-1
+         shadow border border-primary/20 hover:outline-primary/20 hover:outline-1 group
         bg-gradient-to-br border border-zinc-200  dark:border-0 from-slate-100 dark:from-slate-900 via-green-100 dark:via-green-950  to-emerald-100 dark:to-emerald-900  s-FD2xrYezMqqb">
       <div class="card-top">
         <h3 class="card-title text-primary/70">{item.title}</h3>
       </div>
 
-      <div class="card-amount text-primary/70 mb-1">
+      <div class="card-amount text-primary/70 mb-1 group-hover:text-info">
         {#if item.title.includes("promet")}
           <span class="value">€ {item.amount.toFixed(2)}</span>
         {:else}
