@@ -22,6 +22,8 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
     
     private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
+    
+    private final String DEFAULT_SENDER = "SYSTEM";
 
     
     // Get all notifications for a user
@@ -60,31 +62,40 @@ public class NotificationService {
         return notificationRepository.save(notification);
     }
     
-    // Create notification with builder pattern
-    @Transactional(propagation = Propagation.REQUIRES_NEW)  //Ovo je bitno
-    public void createNotification(String title, String message, String from, String to, String type, String refType, Long refId) 
+    // REQUIRES_NEW: poziva se iz AFTER_COMMIT listenera, gde originalna transakcija
+    // više ne prima upise, pa je potrebna nova, odvojena transakcija.
+    // Ovo je bitno da bi radilo slanje notifikacija
+    @Transactional(propagation = Propagation.REQUIRES_NEW)  
+    public PGSNotification createNewReservationNotification(String to, Long refId) 
     {
-        System.out.println("asfasdasdsadasd");
+        return createNotification("Nova rezervacija", "Kreirana je nova rezervacija.", DEFAULT_SENDER, to, "RESERVATION_CREATED", "PGSReservation", refId);
+    }
+    
+    //Necemo koristiti dupli transactional
+    private PGSNotification createNotification(String title, String message, String from, String to, String type, String refType, Long refId) 
+    {
         logger.debug("Creating notification");
-        PGSNotification notification = new PGSNotification();
-        notification.setTitle(title);
-        notification.setMessage(message);
-        notification.setFrom(from);
-        notification.setTo(to);
-        notification.setType(type);
-        notification.setReferenceType(refType);
-        notification.setReferenceId(refId);
-        System.out.println("savin notifications...");
-        System.out.println(notification.toString());
+        
+        // Create notification with builder pattern
+        PGSNotification notification = PGSNotification.builder()
+        .title(title).message(message).from(from).to(to)
+        .type(type).referenceType(refType).referenceId(refId)
+        .build();
+        
+        logger.debug("Saving notification...");
+        logger.debug(notification.toString());
+        
         notification = notificationRepository.save(notification);
-        System.out.println("Notification saved "+notification.getId());
-
-
+        
+        logger.debug("Notification saved "+notification.getId());
+        
+        return notification;
+    }
+    
+    public void sendToUser(String user, PGSNotification notification)
+    {
         messagingTemplate.convertAndSendToUser(
-                to,                        // username primatelja
-                "/queue/notifications",    // destinacija
-                notification               // bolje DTO nego entitet
-        );
+                user, "/queue/notifications", notification);
     }
     
     // Mark notification as read

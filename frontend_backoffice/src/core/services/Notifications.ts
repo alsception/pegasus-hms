@@ -22,31 +22,61 @@ export const unreadCount = writable<number>(0);
 
 let stompClient: Client | null = null;
 
-const token = getToken();
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-export function connectNotifications(): void 
+async function loadUnreadNotifications(): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const unread: Notification[] = await response.json();
+
+    // Zamijeni listu (ne dodaj), da se ne dupliraju pri reconnectu
+    notifications.set(unread);
+    unreadCount.set(unread.length);
+  } catch (err) {
+    console.error('Greška pri učitavanju neprocitanih notifikacija:', err);
+  }
+}
+
+export function connectNotificationsWebsocket(): void 
 {
-  console.log('connecting notifications...');
-  if (stompClient?.active) return; // već konektovan, ne diraj
+  if (stompClient?.active) return;
 
   stompClient = new Client({
     webSocketFactory: () => new SockJS(`${API_BASE_URL}/ws`),
-    connectHeaders: {
-      Authorization: `Bearer ${token}`
+    beforeConnect: () => {
+      stompClient!.connectHeaders = { Authorization: `Bearer ${getToken()}` };
     },
     reconnectDelay: 5000,
+    onConnect: async () => 
+    {
+      console.log('Notifications WebSocket connected');
 
-    onConnect: () => {
-      console.log('Notifikacije: konektovan');
+      // 1. Prvo se pretplati, da ne propustiš ništa što stigne dok traje fetch
+      stompClient!.subscribe('/user/queue/notifications', (message: IMessage) => 
+      {
+        console.log('Got new notification');
 
-      stompClient!.subscribe('/user/queue/notifications', (message: IMessage) => {
         const notification: Notification = JSON.parse(message.body);
 
-        notifications.update(list => [notification, ...list]);
-        unreadCount.update(count => count + 1);
+        console.log(notification);
+
+        notifications.update(list => {
+          // zaštita od duplikata (npr. stigne i preko WS-a i preko REST-a)
+          if (list.some(n => n.id === notification.id)) return list;
+          unreadCount.update(count => count + 1);
+          return [notification, ...list];
+        });
       });
+
+      // 2. Zatim učitaj postojeće neprocitane
+      await loadUnreadNotifications();
     },
 
     onStompError: (frame: IFrame) => {
@@ -60,4 +90,6 @@ export function connectNotifications(): void
 export function disconnectNotifications(): void {
   stompClient?.deactivate();
   stompClient = null;
+  notifications.set([]);
+  unreadCount.set(0);
 }

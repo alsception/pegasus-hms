@@ -1,6 +1,3 @@
-package org.alsception.pegasus.features.events;
+package org.alsception.pegasus.features.reservations;
 
-public record ReservationCreatedEvent(
-        Long reservationId,
-        String username) {
-}
+public record ReservationCreatedEvent( Long reservationId, String username ) {}

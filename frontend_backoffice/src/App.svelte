@@ -13,7 +13,8 @@
   import InfoModal from "./core/utils/ErrorModal.svelte";
   import { navRoutes } from "./core/navigation/menu/navRoutes";
   import type { NavRoutesMap } from "./core/navigation/menu/MenuTypes";
-  import { connectNotifications } from "./core/services/Notifications";
+  import { connectNotificationsWebsocket } from "./core/services/Notifications";
+  import NotificationsInfo from "./core/navigation/NotificationsInfo.svelte";
 
   document.title = 'Pegasus'
 
@@ -78,7 +79,7 @@
 
       if(isAuthenticated)
       {
-        connectNotifications();
+        connectNotificationsWebsocket();
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -133,7 +134,56 @@
       <div class="px-4 font-bold text-primary">
         PEGASUS HMS
       </div>
+<div class="dropdown ml-auto">
+      <button
+        tabindex="0"
+        class="btn btn-ghost p-0 hover:bg-primary/10 text-gray-500 text-xl"
+        data-tip="Notifications"
+        aria-label="Notifications"
+      >
+        <i id="notifications-icon" class="fas fa-bell text-sm md:text-lg"></i>
+        <span
+          id="notifications-indicator"
+          class="text-sm text-zinc-50 bg-error px-1 hidden"
+          style="position: relative;top: -0.5rem;left: -0.5rem;">12</span
+        >
+      </button>
 
+      <NotificationsInfo />
+    </div>
+<!-- 
+        <ul
+          class="menu menu-sm dropdown-content w-52 p-2 scale-in-ver-top
+                bg-base-100 dark:bg-zinc-900
+                rounded shadow
+                max-h-180 overflow-x-auto block"
+          style="min-width: 300px; left: -270px; top: 44px"
+        >
+          <li class="flex  px-3 py-2 rounded-md">
+            <div class="inline-flex gap-1">
+            No new notifications
+            </div>
+          </li>
+          <li class=""></li>
+                <li class="w-full border-t border-primary/10">
+                    <div class="flex items-center px-3 py-2 rounded-md cursor-pointer
+                                hover:bg-base-200 hover:text-blue-400
+                                text-primary text-sm"
+                    >
+                        <i class="fas fa-info w-5 mr-3"></i>
+
+                        <div class="flex flex-col">
+                        <p class="font-bold dark:text-gray-400">
+asd                        </p>
+                        <p class="text-xs dark:text-gray-500 ">
+fgh                        </p>
+                        <p class="text-xs dark:text-gray-600 ">fgh</p>
+                        </div>
+                    </div>
+                </li>
+        </ul>
+
+ -->
     </nav>
 
     <!-- Main content goes here inside routes-->

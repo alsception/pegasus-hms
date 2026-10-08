@@ -1,6 +1,8 @@
 
 package org.alsception.pegasus.features.notifications;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,11 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public long getUnreadCount(Authentication auth) {
         return repository.countByToAndReadFalse(auth.getName());
+    }
+
+    @GetMapping("/unread")
+    public List<PGSNotification> getUnread(Authentication auth) {
+        return repository.findByToAndReadFalseOrderByCreatedDesc(auth.getName());
     }
 
     @PatchMapping("/{id}/read")

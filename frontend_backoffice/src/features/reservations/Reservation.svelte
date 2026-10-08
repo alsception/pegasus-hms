@@ -9,6 +9,7 @@
   import { formatDateTime } from "../../utils/formatting";
   import { showSuccessToast } from "../../core/utils/toaster";
   import type { Reservation } from "./Reservation";
+  import { showErrorModalWithTitle } from "../../utils/modal";
 
   interface RoomOption {
     id: number;
@@ -196,8 +197,10 @@
       showSuccessToast(isNew ? "Rezervacija je kreirana" : "Rezervacija je sačuvana");
 
       push("/reservations");
-    } catch (err) {
-      alert((err as Error).message);
+    } 
+    catch (err) 
+    {
+      showErrorModalWithTitle("Greška prilikom kreiranja rezervacije", err.message);
     } finally {
       loading = false;
     }
@@ -235,15 +238,18 @@
 
 <div class="relative w-full h-full scale-up-center-normal">
   {#if !$auth.isAuthenticated}
-    <Login />
-
-  {:else if loading}
-    <LoadingOverlay />
-
+  
+  <Login />
+  
   {:else if error}
+
     <ErrorDiv {error} />
 
   {:else}
+
+  {#if loading}
+    <LoadingOverlay />
+  {/if}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <form
       on:submit|preventDefault={handleSubmit}

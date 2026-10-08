@@ -12,7 +12,8 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 /*
- * TODO: tovo mozda nebi treblo da se zove sa prefixom pgs_ jer nije business logic entitet, a i tabela se zove samo config, da bude ispred i da se razlikuje od ostalih
+ * TODO: ovo mozda nebi treblo da se zove sa prefixom pgs_ jer nije business logic entitet, a i tabela se zove samo config, 
+    da bude ispred i da se razlikuje od ostalih
  */
 
 

@@ -2,7 +2,6 @@ package org.alsception.pegasus.features.reservations;
 
 import lombok.RequiredArgsConstructor;
 
-import org.alsception.pegasus.features.events.ReservationCreatedEvent;
 import org.alsception.pegasus.features.rooms.PGSRoom;
 import org.alsception.pegasus.features.rooms.PGSRoomRepository;
 import org.alsception.pegasus.features.users.PGSUser;
@@ -106,9 +105,11 @@ public class PGSReservationService {
 
         reservation = reservationRepository.save(reservation);
 
-        //Here we publish event that will be captured by ReservationNotificationListener
-        logger.info("Publishing new event: ref["+reservation.getId()+"]");
-        publisher.publishEvent(new ReservationCreatedEvent(reservation.getId(),"pgsadmin"));
+        //Here we publish event that will be captured by ReservationNotificationListener, after reservation is saved
+
+        logger.debug("Publishing new ReservationCreatedEvent, refId["+reservation.getId()+"]");
+
+        publisher.publishEvent( new ReservationCreatedEvent( reservation.getId(),"pgsadmin" ));//for now we hardcode main admin user.
 
         return toDTO(reservation);
     }

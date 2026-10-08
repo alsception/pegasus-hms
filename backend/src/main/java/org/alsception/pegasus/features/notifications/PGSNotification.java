@@ -5,14 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+import lombok.Builder;
 
 @Entity
 @Table(name = "pgs_notifications")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PGSNotification 
 {
     
@@ -32,7 +33,7 @@ public class PGSNotification
     @Column(name = "to_user")
     private String to;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Boolean read = false;
 
     /* @Enumerated(EnumType.STRING) */
